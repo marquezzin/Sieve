@@ -54,9 +54,29 @@ Regra: **trabalho que cai claramente num agente, delegar.** Orquestrador (você)
 Antes de mudar arquitetura ou scaffoldar módulo novo, leia:
 
 - [`docs/decisions/0001-stack-padrao.md`](docs/decisions/0001-stack-padrao.md) — ADR da stack padrão Synapta.
+- [`docs/decisions/0002-multi-agent-sem-framework.md`](docs/decisions/0002-multi-agent-sem-framework.md) — por que use cases dedicados + tool use nativo, sem LangGraph/CrewAI.
+- [`docs/decisions/0003-knowledge-base-format.md`](docs/decisions/0003-knowledge-base-format.md) — formato MD + frontmatter, ingest idempotente, dois modos de consumo (full-load + retrieval).
 - [`docs/decisions/TEMPLATE.md`](docs/decisions/TEMPLATE.md) — template pra ADR novo (decisão durável merece ADR).
+- [`docs/conceitos-fundamentais.md`](docs/conceitos-fundamentais.md) — embeddings, pgvector, chunking, KnowledgeDocument/Chunk, dois modos de consumo. Leitura obrigatória antes de tocar em agentes ou knowledge base.
 - `backend/CLAUDE.md` — todas as convenções Django/DRF/Celery.
 - `frontend/CLAUDE.md` — todas as convenções React/Mantine/TanStack.
+
+## Plano de implementação por fases
+
+O desenvolvimento do sistema é organizado em **fases sequenciais**, cada uma com escopo, critérios de aceite testáveis e verificação end-to-end documentados:
+
+- **Índice e status:** [`docs/planning/fases-implementacao.md`](docs/planning/fases-implementacao.md)
+- **Spec de cada fase:** [`docs/planning/fases/`](docs/planning/fases/)
+
+Quando o usuário pedir **"faça a próxima fase de implementação"** (ou similar), siga o workflow descrito no índice:
+
+1. Abrir o índice, identificar a primeira fase com status `🔲 Pendente`.
+2. Abrir o arquivo `fases/fase-N-tema.md` correspondente.
+3. Reler os contextos obrigatórios listados no topo da fase (este `CLAUDE.md`, `backend/CLAUDE.md`, `frontend/CLAUDE.md`, conceitos fundamentais, ADRs ativos).
+4. Executar contra **todos** os critérios de aceite da fase.
+5. Atualizar o spec da fase (status + entrega + decisões divergentes) e o índice ao fim.
+
+Fora desse fluxo: não invente fases novas, não pule fases, não misture escopo de fases diferentes na mesma PR. Se aparecer trabalho fora do roadmap, criar nova fase explícita seguindo o template visual das existentes.
 
 ## Convenções de colaboração
 
