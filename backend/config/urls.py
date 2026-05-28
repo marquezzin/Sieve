@@ -26,3 +26,7 @@ urlpatterns = [
 # `healthcheck` app pode ainda não existir durante bootstrap. Inclui se disponível.
 with contextlib.suppress(ImportError):
     urlpatterns.append(path("api/v1/healthcheck/", include("healthcheck.api.urls")))
+
+# `knowledge` app — endpoint de debug em /api/v1/knowledge/status/ (IsAdminUser).
+with contextlib.suppress(ImportError):
+    urlpatterns.append(path("api/v1/knowledge/", include("knowledge.api.urls")))

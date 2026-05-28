@@ -7,7 +7,8 @@ COMPOSE = docker compose --env-file .env -f docker/compose.yml
         frontend-lint frontend-typecheck frontend-install \
         sync-agents-md sync-codex-agents \
         clear bash frontend-bash \
-        refresh-venv refresh-node-modules
+        refresh-venv refresh-node-modules \
+        ingest-knowledge ingest-knowledge-force knowledge-status
 
 help:
 	@echo "Targets disponíveis:"
@@ -40,6 +41,9 @@ help:
 	@echo "  frontend-bash    - sh dentro do frontend"
 	@echo "  refresh-venv     - recria venv backend (use após mudar pyproject.toml/uv.lock)"
 	@echo "  refresh-node-modules - recria node_modules frontend (use após mudar package.json)"
+	@echo "  ingest-knowledge - ingere knowledge base (idempotente, pula hashes iguais)"
+	@echo "  ingest-knowledge-force - força re-ingest de tudo (ignora hash cache)"
+	@echo "  knowledge-status - GET /api/v1/knowledge/status/ (counts + última ingestão)"
 	@echo "  clear            - down -v --remove-orphans (apaga TUDO incluindo o banco)"
 
 # ─── Lifecycle ────────────────────────────────────────────────────────────────
@@ -177,6 +181,23 @@ refresh-node-modules:
 	$(COMPOSE) rm -f frontend
 	docker volume rm sieve_frontend_node_modules
 	$(COMPOSE) up -d frontend
+
+# ─── Knowledge base ───────────────────────────────────────────────────────────
+# Ingestão da knowledge base (markdown + frontmatter) pra busca semântica.
+# `ingest-knowledge` é idempotente — calcula hash de cada doc e pula se igual.
+# Use `ingest-knowledge-force` quando trocou o modelo de embeddings ou quer
+# refazer tudo do zero.
+
+ingest-knowledge:
+	$(COMPOSE) exec backend uv run python manage.py ingest_knowledge
+
+ingest-knowledge-force:
+	$(COMPOSE) exec backend uv run python manage.py ingest_knowledge --force
+
+# Status da knowledge base: counts por tipo + última ingestão. Tenta `jq`
+# primeiro pra output colorido; cai pra `python -m json.tool` se não tiver.
+knowledge-status:
+	@curl -s http://localhost:8000/api/v1/knowledge/status/ | (jq . 2>/dev/null || python -m json.tool)
 
 # ─── Nuke ─────────────────────────────────────────────────────────────────────
 # ⚠️  APAGA TUDO incluindo pgdata (banco) e miniodata (uploads).

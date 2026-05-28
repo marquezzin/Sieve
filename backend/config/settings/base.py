@@ -46,6 +46,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "core.apps.CoreConfig",
     "healthcheck.apps.HealthcheckConfig",
+    "knowledge.apps.KnowledgeConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -113,6 +114,19 @@ MINIO_ENDPOINT = config("MINIO_ENDPOINT", default="")
 MINIO_BUCKET = config("MINIO_BUCKET", default="")
 MINIO_ROOT_USER = config("MINIO_ROOT_USER", default="")
 MINIO_ROOT_PASSWORD = config("MINIO_ROOT_PASSWORD", default="")
+
+# ─── Embeddings (knowledge base, matching semântico) ─────────────────────────
+EMBEDDINGS_PROVIDER = config("EMBEDDINGS_PROVIDER", default="voyage")
+EMBEDDINGS_API_KEY = config("EMBEDDINGS_API_KEY", default="")
+EMBEDDINGS_MODEL = config("EMBEDDINGS_MODEL", default="voyage-3")
+EMBEDDINGS_DIM = config("EMBEDDINGS_DIM", default=1024, cast=int)
+
+# ─── Knowledge base ──────────────────────────────────────────────────────────
+# Diretório raiz dos arquivos .md ingeridos pelo app `knowledge`. BASE_DIR é
+# backend/, subindo um nível chega na raiz do repo onde mora `knowledge_base/`.
+KNOWLEDGE_BASE_DIR = BASE_DIR.parent / "knowledge_base"
+KNOWLEDGE_CHUNK_SIZE = config("KNOWLEDGE_CHUNK_SIZE", default=300, cast=int)
+KNOWLEDGE_CHUNK_OVERLAP = config("KNOWLEDGE_CHUNK_OVERLAP", default=50, cast=int)
 
 # ─── Celery ──────────────────────────────────────────────────────────────────
 CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://localhost:6379/1")

@@ -2,7 +2,9 @@ name: sieve
 
 services:
   postgres:
-    image: postgres:18-alpine
+    # pgvector/pgvector:pg18 = Postgres 18 oficial (Debian-based) + extensão
+    # pgvector pré-instalada. Ativar em migration via `CREATE EXTENSION vector;`.
+    image: pgvector/pgvector:pg18
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -17,10 +19,11 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
-      # PG18 mudou a recomendação de mount: aponta direto pra /var/lib/postgresql
-      # (sem /data). Manter /data faz a imagem 18-alpine reclamar de "unused
-      # mount/volume" e o container morre no boot.
-      # Ref: github.com/docker-library/postgres/issues/37 e PR/1259
+      # Postgres 18+ (incluindo pgvector/pgvector:pg18) recomenda mount no
+      # diretório pai /var/lib/postgresql — o Postgres cria internamente o
+      # subdir versionado (ex: /var/lib/postgresql/18). Mount em
+      # /var/lib/postgresql/data dispara "Error: ... unused mount/volume".
+      # Ref: github.com/docker-library/postgres/pull/1259.
       - pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
@@ -76,6 +79,10 @@ services:
     volumes:
       - ../backend:/app
       - backend_venv:/app/.venv
+      # knowledge_base/ mora na raiz do repo (versionado, fácil pra humano
+      # editar). Montado em /knowledge_base — match com
+      # KNOWLEDGE_BASE_DIR = BASE_DIR.parent / "knowledge_base" em settings/base.py.
+      - ../knowledge_base:/knowledge_base
     command: uv run python manage.py runserver 0.0.0.0:8000
     ports:
       - "8000:8000"
@@ -97,6 +104,7 @@ services:
     volumes:
       - ../backend:/app
       - backend_venv:/app/.venv
+      - ../knowledge_base:/knowledge_base
     command: uv run celery -A config worker -l INFO
     networks:
       - default
@@ -116,6 +124,7 @@ services:
     volumes:
       - ../backend:/app
       - backend_venv:/app/.venv
+      - ../knowledge_base:/knowledge_base
     command: uv run celery -A config beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
     networks:
       - default
