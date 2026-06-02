@@ -108,6 +108,21 @@
     html.theme-dark .to-white { --tw-gradient-to:#211c16 !important; }
     html.theme-dark .from-indigo-0 { --tw-gradient-from:rgba(207,85,48,.20) !important; }
 
+    /* icon tiles in dark — kill the glossy light→dark gradient (the "texture")
+       and the bright inset/shadow; use a flat tone tint. Targets the soft tiles
+       (gradient + ring-inset / border-indigo-1), NOT the saturated buttons. */
+    html.theme-dark .bg-gradient-to-b.ring-inset,
+    html.theme-dark .bg-gradient-to-br.from-indigo-0 {
+      background-image: none !important;
+      box-shadow: none !important;
+    }
+    html.theme-dark .bg-gradient-to-b.ring-inset.from-indigo-0,
+    html.theme-dark .bg-gradient-to-br.from-indigo-0 { background-color: rgba(207,85,48,.16) !important; }
+    html.theme-dark .bg-gradient-to-b.ring-inset.from-green-0 { background-color: rgba(64,192,87,.15) !important; }
+    html.theme-dark .bg-gradient-to-b.ring-inset.from-\[\#f3f0ff\] { background-color: rgba(124,92,236,.20) !important; }
+    html.theme-dark .text-\[\#7048e8\] { color:#b197fc !important; }
+    html.theme-dark .ring-\[\#e5dbff\] { --tw-ring-color:rgba(124,92,236,.32) !important; }
+
     /* text */
     html.theme-dark .text-ink-9, html.theme-dark .text-gray-9 { color:#f4eee4 !important; }
     html.theme-dark .text-ink-8, html.theme-dark .text-gray-8 { color:#e0d6c8 !important; }
@@ -158,6 +173,64 @@
 </head>
 <body class="font-sans antialiased">
   <div id="root"></div>
+
+  <!-- Standalone Tweaks trigger ─────────────────────────────────────────────
+       O painel de Tweaks (src/tweaks-panel.jsx) só abre/fecha respondendo a
+       mensagens da toolbar do Claude Design (o "host"). Rodando direto no
+       navegador não há host, então este script faz o papel dele: um botão
+       flutuante que abre/fecha, mais o eco de __deactivate_edit_mode pra que
+       o X do próprio painel também funcione. Atalho: Shift+T. -->
+  <button id="tweaks-trigger" type="button" aria-label="Abrir Tweaks" title="Tweaks (Shift+T)">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/>
+      <line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/>
+      <line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/>
+      <line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/>
+      <line x1="18" x2="22" y1="16" y2="16"/>
+    </svg>
+    <span>Tweaks</span>
+  </button>
+  <style>
+    #tweaks-trigger {
+      position: fixed; left: 16px; bottom: 16px; z-index: 2147483646;
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 13px; border: 1px solid rgba(60,42,28,.14); border-radius: 999px;
+      background: #ffffff; color: #574f43; cursor: pointer;
+      font: 600 12.5px/1 "Hanken Grotesk", system-ui, sans-serif;
+      box-shadow: 0 6px 18px -8px rgba(60,38,20,.28), 0 2px 6px -2px rgba(60,38,20,.14);
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    #tweaks-trigger:hover { transform: translateY(-1px); box-shadow: 0 10px 26px -10px rgba(60,38,20,.34); }
+    #tweaks-trigger[data-open="1"] { background: #cf5530; color: #fff; border-color: transparent; }
+    html.theme-dark #tweaks-trigger { background: #211c16; color: #e0d6c8; border-color: rgba(255,255,255,.12); }
+    html.theme-dark #tweaks-trigger[data-open="1"] { background: #cf5530; color: #fff; }
+  </style>
+  <script>
+    (function () {
+      var btn = document.getElementById('tweaks-trigger');
+      var open = false;
+      function sync() { btn.setAttribute('data-open', open ? '1' : '0'); }
+      function setOpen(v) {
+        open = v;
+        window.postMessage({ type: open ? '__activate_edit_mode' : '__deactivate_edit_mode' }, '*');
+        sync();
+      }
+      btn.addEventListener('click', function () { setOpen(!open); });
+      // Shift+T alterna (ignora quando digitando num campo)
+      window.addEventListener('keydown', function (e) {
+        var el = e.target, tag = el && el.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || (el && el.isContentEditable)) return;
+        if (e.shiftKey && (e.key === 'T' || e.key === 't')) { e.preventDefault(); setOpen(!open); }
+      });
+      // O X do painel posta __edit_mode_dismissed; fazemos o papel do host e fechamos.
+      window.addEventListener('message', function (e) {
+        if (e && e.data && e.data.type === '__edit_mode_dismissed') { open = false; sync(); }
+      });
+      sync();
+    })();
+  </script>
+
   <script type="text/babel" src="src/tweaks-panel.jsx"></script>
   <script type="text/babel" src="src/bundle.jsx"></script>
 </body>

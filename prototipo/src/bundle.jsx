@@ -37,7 +37,7 @@ const Icon = {
   MapPin:   (p) => <Svg {...p}><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></Svg>,
   Flag:     (p) => <Svg {...p}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></Svg>,
   ArrowUp:  (p) => <Svg {...p}><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></Svg>,
-  Paperclip:(p) => <Svg {...p}><path d="M13.234 20.252 21 12.3a4.243 4.243 0 0 0-6-6L4.453 16.453a6 6 0 1 0 8.486 8.486"/></Svg>,
+  Paperclip:(p) => <Svg {...p}><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></Svg>,
   PenLine:  (p) => <Svg {...p}><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></Svg>,
   Square:   (p) => <Svg {...p}><rect width="14" height="14" x="5" y="5" rx="2"/></Svg>,
   Command:  (p) => <Svg {...p}><path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"/></Svg>,
@@ -734,7 +734,7 @@ function Bubble({ m }) {
   if (m.role === 'user') {
     return (
       <div className="flex justify-end pop">
-        <div className="max-w-[78%] md:max-w-[60%]">
+        <div className="max-w-[84%] md:max-w-[70%]">
           <div className="rounded-2xl rounded-tr-md px-4 py-3 text-white text-[14.5px] leading-relaxed bg-gradient-to-br from-indigo-5 to-indigo-7 shadow-[0_2px_8px_rgba(207,85,48,.3)]">{m.text}</div>
           {m.t && <p className="text-[11px] text-gray-5 mt-1 text-right pr-1">{m.t}</p>}
         </div>
@@ -745,7 +745,7 @@ function Bubble({ m }) {
     return (
       <div className="flex gap-3 pop">
         <InterviewerAvatar />
-        <div className="max-w-[80%] md:max-w-[64%]">
+        <div className="max-w-[84%] md:max-w-[74%]">
           <div className="rounded-2xl rounded-tl-md overflow-hidden ring-1 ring-indigo-2 shadow-card">
             <div className="flex items-center gap-1.5 px-4 py-2 bg-indigo-0 border-b border-indigo-1">
               <Icon.PenLine size={13} className="text-indigo-6" />
@@ -761,7 +761,7 @@ function Bubble({ m }) {
   return (
     <div className="flex gap-3 pop">
       <InterviewerAvatar />
-      <div className="max-w-[80%] md:max-w-[64%]">
+      <div className="max-w-[84%] md:max-w-[74%]">
         <div className="rounded-2xl rounded-tl-md px-4 py-3 bg-white border border-gray-2 text-[14.5px] leading-relaxed text-ink-8 shadow-card">{m.text}</div>
         {m.t && <p className="text-[11px] text-gray-5 mt-1 pl-1">{m.t}</p>}
       </div>
@@ -801,21 +801,21 @@ function Composer({ value, setValue, onSend, disabled }) {
   const send = () => { if (value.trim() && !disabled) onSend(value.trim()); };
   return (
     <div className="composer-fade px-4 md:px-6 pb-5 pt-3">
-      <div className="max-w-[760px] mx-auto">
-        <div className={cx('flex items-end gap-2 bg-white rounded-2xl border shadow-card transition-all p-2 pl-3', disabled ? 'border-gray-2 opacity-80' : 'border-gray-3 focus-within:border-indigo-4 focus-within:shadow-glow')}>
-          <button className="grid place-items-center w-9 h-9 rounded-lg text-gray-5 hover:bg-gray-1 hover:text-gray-7 transition-colors shrink-0 mb-0.5" title="Anexar"><Icon.Paperclip size={18} /></button>
+      <div className="max-w-[900px] mx-auto">
+        <div className={cx('flex items-center gap-2 bg-white rounded-2xl border shadow-card transition-all px-2.5 py-2', disabled ? 'border-gray-2 opacity-80' : 'border-gray-3 focus-within:border-indigo-4 focus-within:shadow-glow')}>
+          <button className="grid place-items-center w-9 h-9 rounded-lg text-gray-5 hover:bg-gray-1 hover:text-gray-7 transition-colors shrink-0" title="Anexar"><Icon.Paperclip size={18} /></button>
           <textarea ref={ref} rows={1} value={value} disabled={disabled}
             onChange={e => setValue(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-            placeholder={disabled ? 'O entrevistador está respondendo…' : 'Escreva sua resposta…  (Enter envia, Shift+Enter quebra linha)'}
-            className="flex-1 resize-none bg-transparent outline-none text-[14.5px] leading-relaxed text-ink-9 placeholder:text-gray-5 py-2 max-h-40" />
+            placeholder={disabled ? 'O entrevistador está respondendo…' : 'Escreva sua resposta…'}
+            className="flex-1 resize-none bg-transparent outline-none text-[14.5px] leading-6 text-ink-9 placeholder:text-gray-5 py-2 min-h-[40px] max-h-40" />
           <button onClick={send} disabled={!value.trim() || disabled}
             className={cx('grid place-items-center w-10 h-10 rounded-xl shrink-0 transition-all',
               value.trim() && !disabled ? 'text-white bg-gradient-to-b from-indigo-5 to-indigo-7 hover:from-indigo-6 hover:to-indigo-8 shadow-sm' : 'bg-gray-1 text-gray-4 cursor-not-allowed')}>
             <Icon.ArrowUp size={19} />
           </button>
         </div>
-        <p className="text-center text-[11px] text-gray-5 mt-2">O Sieve organiza suas respostas — escreva naturalmente, sem se preocupar com formatação.</p>
+        <p className="text-center text-[11px] text-gray-5 mt-2">Enter envia · Shift+Enter quebra linha — o Sieve organiza o resto.</p>
       </div>
     </div>
   );
@@ -889,19 +889,7 @@ function Chat({ showToast, setRoute, newSessionSignal }) {
   }
 
   return (
-    <div className="flex flex-col" style={{ height:'calc(100vh - 132px)' }}>
-      {/* prototype controls */}
-      <div className="shrink-0 flex items-center justify-between gap-3 px-4 md:px-6 py-2.5 border-b border-gray-2 bg-white/70 backdrop-blur flex-wrap">
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-[.12em] text-gray-5">Estado</span>
-          <StateToggle value={session} onChange={v => v === 'none' ? setSession('none') : setSession('active')} options={[{value:'active',label:'Sessão ativa'},{value:'none',label:'Sem sessão'}]} />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-[.12em] text-gray-5">Layout das fases</span>
-          <StateToggle value={layout} onChange={setLayout} options={[{value:'top',label:'Stepper no topo'},{value:'rail',label:'Trilha lateral'}]} />
-        </div>
-      </div>
-
+    <div className="flex flex-col h-full">
       {session === 'none' ? <ChatEmpty onStart={startFresh} /> : (
         <div className="flex-1 flex min-h-0">
           <div className="flex-1 flex flex-col min-w-0">
@@ -923,7 +911,7 @@ function Chat({ showToast, setRoute, newSessionSignal }) {
 
             {/* messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 md:px-6 py-6">
-              <div className="max-w-[760px] mx-auto flex flex-col gap-5">
+              <div className="max-w-[900px] mx-auto flex flex-col gap-5">
                 {messages.map((m,i) => <Bubble key={i} m={m} />)}
                 {waiting && <TypingBubble />}
                 {showSuggestions && <Suggestions items={lastAssistant.suggestions} onPick={send} />}
@@ -932,7 +920,6 @@ function Chat({ showToast, setRoute, newSessionSignal }) {
 
             <Composer value={input} setValue={setInput} onSend={send} disabled={waiting} />
           </div>
-          {layout === 'rail' && <PhaseRail current={phase} />}
         </div>
       )}
     </div>
