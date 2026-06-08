@@ -53,6 +53,9 @@ class MessagesView(APIView):
     def get(self, request, session_id):
         session = get_session_for_user(user=request.user, session_id=session_id)
         paginator = StandardPagination()
+        # Expõe o paginator na view pra o EnvelopeRenderer reportar o page_size
+        # real (APIView não tem `.paginator` como GenericAPIView).
+        self.paginator = paginator
         page = paginator.paginate_queryset(list_visible_messages(session=session), request, view=self)
         data = MessageSerializer(page, many=True).data
         return paginator.get_paginated_response(data)
