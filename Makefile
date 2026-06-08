@@ -1,5 +1,10 @@
 COMPOSE = docker compose --env-file .env -f docker/compose.yml
 
+# Porta do backend no host, lida do .env (remapeável pra rodar lado a lado com
+# outro stack). Default 8000 quando não setado. Usada pelos alvos que fazem curl.
+BACKEND_HOST_PORT := $(shell grep -sE '^BACKEND_HOST_PORT=' .env | tail -1 | cut -d= -f2)
+API_BASE := http://localhost:$(if $(BACKEND_HOST_PORT),$(BACKEND_HOST_PORT),8000)
+
 .PHONY: help up down restart restart-celery build rebuild logs ps \
         dev dev-up \
         migrate migrations shell superuser seed \
@@ -8,7 +13,8 @@ COMPOSE = docker compose --env-file .env -f docker/compose.yml
         sync-agents-md sync-codex-agents \
         clear bash frontend-bash \
         refresh-venv refresh-node-modules \
-        ingest-knowledge ingest-knowledge-force knowledge-status
+        ingest-knowledge ingest-knowledge-force knowledge-status \
+        swagger
 
 help:
 	@echo "Targets disponíveis:"
@@ -44,6 +50,7 @@ help:
 	@echo "  ingest-knowledge - ingere knowledge base (idempotente, pula hashes iguais)"
 	@echo "  ingest-knowledge-force - força re-ingest de tudo (ignora hash cache)"
 	@echo "  knowledge-status - GET /api/v1/knowledge/status/ (counts + última ingestão)"
+	@echo "  swagger          - imprime/abre as URLs do Swagger UI, Redoc e schema OpenAPI"
 	@echo "  clear            - down -v --remove-orphans (apaga TUDO incluindo o banco)"
 
 # ─── Lifecycle ────────────────────────────────────────────────────────────────
@@ -197,7 +204,15 @@ ingest-knowledge-force:
 # Status da knowledge base: counts por tipo + última ingestão. Tenta `jq`
 # primeiro pra output colorido; cai pra `python -m json.tool` se não tiver.
 knowledge-status:
-	@curl -s http://localhost:8000/api/v1/knowledge/status/ | (jq . 2>/dev/null || python -m json.tool)
+	@curl -s $(API_BASE)/api/v1/knowledge/status/ | (jq . 2>/dev/null || python -m json.tool)
+
+# ─── API docs (OpenAPI / Swagger via drf-spectacular) ─────────────────────────
+# Swagger UI interativo + Redoc + schema cru. Porta vem do .env (API_BASE).
+swagger:
+	@echo "Swagger UI: $(API_BASE)/api/v1/docs/"
+	@echo "Redoc:      $(API_BASE)/api/v1/redoc/"
+	@echo "Schema:     $(API_BASE)/api/v1/schema/"
+	@command -v open >/dev/null 2>&1 && open "$(API_BASE)/api/v1/docs/" || true
 
 # ─── Nuke ─────────────────────────────────────────────────────────────────────
 # ⚠️  APAGA TUDO incluindo pgdata (banco) e miniodata (uploads).

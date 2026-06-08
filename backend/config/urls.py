@@ -3,15 +3,23 @@
 Apps de domínio expõem suas próprias rotas via `include(...)`. Este arquivo
 só monta:
 - /admin/
-- /api/v1/health/         (core healthcheck simples — AllowAny)
-- /api/v1/token/          (JWT obtain)
-- /api/v1/token/refresh/  (JWT refresh)
-- /api/v1/healthcheck/    (app `healthcheck`, se existir)
+- /api/v1/health/                  (core healthcheck simples — AllowAny)
+- /api/v1/token/                   (JWT obtain)
+- /api/v1/token/refresh/           (JWT refresh)
+- /api/v1/schema/                  (OpenAPI 3 schema)
+- /api/v1/docs/                    (Swagger UI)
+- /api/v1/redoc/                   (Redoc)
+- /api/v1/healthcheck/             (app `healthcheck`, se existir)
 """
 import contextlib
 
 from django.contrib import admin
 from django.urls import include, path
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from core.observability.health import health_view
@@ -21,6 +29,19 @@ urlpatterns = [
     path("api/v1/health/", health_view, name="health"),
     path("api/v1/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/v1/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    # OpenAPI schema + UIs. O "Authorize" do Swagger injeta o Bearer JWT
+    # (obtido em /api/v1/token/) pra testar os endpoints protegidos.
+    path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "api/v1/docs/",
+        SpectacularSwaggerView.as_view(url_name="schema"),
+        name="swagger-ui",
+    ),
+    path(
+        "api/v1/redoc/",
+        SpectacularRedocView.as_view(url_name="schema"),
+        name="redoc",
+    ),
 ]
 
 # `healthcheck` app pode ainda não existir durante bootstrap. Inclui se disponível.

@@ -41,6 +41,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "django_filters",
     "django_celery_beat",
+    "drf_spectacular",
 ]
 
 LOCAL_APPS = [
@@ -154,7 +155,26 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "core.errors.custom_exception_handler",
+}
+
+# ─── OpenAPI / Swagger (drf-spectacular) ─────────────────────────────────────
+# Schema em /api/v1/schema/ ; UIs em /api/v1/schema/swagger-ui/ e /redoc/.
+# As views do spectacular definem renderers próprios — não passam pelo
+# EnvelopeRenderer. O schema descreve os payloads "plain" (pré-envelope); o
+# wrapper {success, data, ...} é aplicado pelo renderer em runtime.
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Sieve API",
+    "DESCRIPTION": "API do Sieve — entrevistador, redator, revisor, juiz e ATS optimizer.",
+    "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SCHEMA_PATH_PREFIX": "/api/v1",
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SWAGGER_UI_SETTINGS": {
+        "persistAuthorization": True,
+        "displayRequestDuration": True,
+    },
 }
 
 # ─── JWT ─────────────────────────────────────────────────────────────────────
