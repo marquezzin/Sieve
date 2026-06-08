@@ -10,6 +10,7 @@ import { queryClient } from './lib/queryClient';
 
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
+import './styles/global.css';
 
 // Terracota/clay — IDV do Sieve. Acento em torno de #cf5530 (índices 5/6).
 const terracotta: MantineColorsTuple = [
@@ -25,9 +26,30 @@ const terracotta: MantineColorsTuple = [
   '#7f2f15',
 ];
 
+// Neutra quente do protótipo — substitui a escala `gray` cinza do Mantine.
+const gray: MantineColorsTuple = [
+  '#f8f6f2',
+  '#f1ede6',
+  '#e8e3d9',
+  '#dbd4c7',
+  '#c6bdac',
+  '#a89e8c',
+  '#7d7464',
+  '#574f43',
+  '#37312a',
+  '#221d17',
+];
+
 const theme = createTheme({
   primaryColor: 'terracotta',
-  colors: { terracotta },
+  colors: { terracotta, gray },
+  defaultRadius: 'md',
+  fontFamily: '"Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  fontFamilyMonospace: '"JetBrains Mono", ui-monospace, SFMono-Regular, monospace',
+  headings: {
+    fontFamily: '"Bricolage Grotesque", "Hanken Grotesk", sans-serif',
+    fontWeight: '800',
+  },
 });
 
 const rootEl = document.getElementById('root');

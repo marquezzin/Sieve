@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Center,
-  Divider,
   Group,
   Loader,
   Paper,
@@ -25,6 +24,7 @@ import { useCreateSession } from '../../hooks/useCreateSession';
 import { useSendMessage } from '../../hooks/useSendMessage';
 import { useFinalizeSession } from '../../hooks/useFinalizeSession';
 import { PHASE_LABELS, canFinalize } from '../../types';
+import classes from './ChatPage.module.css';
 
 function ActiveSession({ sessionId }: { sessionId: string }) {
   const sessionQuery = useSession(sessionId);
@@ -63,9 +63,16 @@ function ActiveSession({ sessionId }: { sessionId: string }) {
   const finalizeEnabled = !isCompleted && canFinalize(session.current_phase);
 
   return (
-    <Stack gap={0} h="100%">
+    <Stack gap={0} h="100%" className={classes.canvas}>
       {/* Header da sessão */}
-      <Group justify="space-between" wrap="nowrap" px="md" py="sm" gap="sm">
+      <Group
+        justify="space-between"
+        wrap="nowrap"
+        px="md"
+        py="sm"
+        gap="sm"
+        className={classes.header}
+      >
         <Group gap="sm" wrap="nowrap" miw={0}>
           <InterviewerAvatar size={38} />
           <Box miw={0}>
@@ -105,10 +112,9 @@ function ActiveSession({ sessionId }: { sessionId: string }) {
         </Button>
       </Group>
 
-      <Box px="md" py="xs">
+      <Box px="md" py="xs" className={classes.stepperBar}>
         <PhaseStepper current={session.current_phase} />
       </Box>
-      <Divider />
 
       {/* Mensagens */}
       <ScrollArea flex={1} viewportRef={viewportRef} type="auto">
@@ -120,14 +126,14 @@ function ActiveSession({ sessionId }: { sessionId: string }) {
         </Stack>
       </ScrollArea>
 
-      <Divider />
-
       {/* Composer */}
-      <Box px="md" py="sm" maw={900} mx="auto" w="100%">
-        <ChatComposer
-          disabled={isTyping || isCompleted}
-          onSend={(text) => sendMutation.mutate(text)}
-        />
+      <Box px="md" pt="xs" pb="md" className={classes.composerBar}>
+        <Box maw={900} mx="auto" w="100%">
+          <ChatComposer
+            disabled={isTyping || isCompleted}
+            onSend={(text) => sendMutation.mutate(text)}
+          />
+        </Box>
       </Box>
     </Stack>
   );
@@ -182,7 +188,13 @@ export function ChatPage() {
   };
 
   return (
-    <Paper withBorder radius="md" h="calc(100dvh - 88px)" style={{ overflow: 'hidden' }}>
+    <Paper
+      withBorder
+      radius="md"
+      h="calc(100dvh - 164px)"
+      className={classes.canvas}
+      style={{ overflow: 'hidden' }}
+    >
       {content()}
     </Paper>
   );

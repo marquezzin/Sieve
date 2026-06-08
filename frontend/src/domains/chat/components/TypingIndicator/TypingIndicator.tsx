@@ -6,7 +6,13 @@ export function TypingIndicator() {
   return (
     <Group align="flex-start" gap="sm" wrap="nowrap">
       <InterviewerAvatar size={36} />
-      <Paper radius="lg" px="md" py="md" withBorder style={{ borderTopLeftRadius: 6 }}>
+      <Paper
+        radius="lg"
+        px="md"
+        py="md"
+        className={classes.assistantBubble}
+        style={{ borderTopLeftRadius: 6 }}
+      >
         <span className={classes.dots} aria-label="Entrevistador digitando">
           <span className={classes.dot} />
           <span className={classes.dot} />

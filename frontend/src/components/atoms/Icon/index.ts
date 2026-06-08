@@ -1,0 +1,18 @@
+export type { IconProps } from './Icon';
+export {
+  Filter,
+  Home,
+  Chat,
+  File,
+  Briefcase,
+  Kanban,
+  User,
+  Bell,
+  LogOut,
+  Sparkles,
+  Search,
+  Menu,
+  Settings,
+  Sliders,
+  ChevronDown,
+} from './Icon';

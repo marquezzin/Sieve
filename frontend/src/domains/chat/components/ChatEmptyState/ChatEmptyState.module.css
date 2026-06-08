@@ -1,0 +1,25 @@
+.iconTile {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--mantine-color-terracotta-5), var(--mantine-color-terracotta-6) 55%, #1c1813);
+  box-shadow: 0 10px 30px rgba(207, 85, 48, 0.45);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .iconTile {
+    animation: ringpulse 2.4s infinite;
+  }
+}
+
+@keyframes ringpulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(207, 85, 48, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgba(207, 85, 48, 0);
+  }
+}

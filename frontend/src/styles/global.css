@@ -1,0 +1,30 @@
+/* IDV global do Sieve — fundo cream quente + tipografia display.
+   Tokens espelham o protótipo (prototipo/index.html). */
+
+body {
+  background-color: #faf7f2;
+  color: #1c1813;
+  font-feature-settings: 'ss01';
+}
+
+h1,
+h2,
+h3,
+h4,
+.mantine-Title-root {
+  letter-spacing: -0.02em;
+}
+
+/* Canvas pontilhado quente — fundo do app autenticado. */
+.canvas-bg {
+  background-color: #faf7f2;
+  background-image: radial-gradient(circle at 1px 1px, rgba(150, 55, 24, 0.05) 1px, transparent 0);
+  background-size: 26px 26px;
+}
+
+/* Glow terracota no topo do canvas. */
+.glow-top {
+  background:
+    radial-gradient(55% 60% at 82% -10%, rgba(214, 100, 60, 0.12), transparent 60%),
+    radial-gradient(48% 50% at 2% 0%, rgba(232, 124, 82, 0.08), transparent 55%);
+}

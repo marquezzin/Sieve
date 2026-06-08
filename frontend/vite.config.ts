@@ -26,6 +26,11 @@ export default defineConfig(({ mode }) => {
     server: {
       host: '0.0.0.0',
       port: 5173,
+      // Colima/Docker: o bind-mount do host não propaga eventos inotify pra dentro
+      // da VM, então o watcher nativo do Vite não vê as edições e o HMR "morre".
+      // `usePolling` faz o Vite pollar o filesystem — mais CPU, mas HMR confiável
+      // rodando o dev server dentro do container (o jeito padrão do repo).
+      watch: { usePolling: true, interval: 100 },
       proxy: {
         '/api': {
           target: proxyTarget,

@@ -1,5 +1,6 @@
 import { useState, type KeyboardEvent } from 'react';
-import { ActionIcon, Group, Stack, Text, Textarea } from '@mantine/core';
+import { ActionIcon, Stack, Text, Textarea } from '@mantine/core';
+import classes from './ChatComposer.module.css';
 
 interface ChatComposerProps {
   disabled?: boolean;
@@ -9,8 +10,8 @@ interface ChatComposerProps {
 function SendIcon() {
   return (
     <svg
-      width={18}
-      height={18}
+      width={19}
+      height={19}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -45,14 +46,14 @@ export function ChatComposer({ disabled = false, onSend }: ChatComposerProps) {
   const canSend = value.trim().length > 0 && !disabled;
 
   return (
-    <Stack gap={6}>
-      <Group align="flex-end" gap="xs" wrap="nowrap">
+    <Stack gap={8}>
+      <div className={`${classes.card} ${disabled ? classes.cardDisabled : ''}`}>
         <Textarea
           flex={1}
           autosize
           minRows={1}
           maxRows={6}
-          radius="lg"
+          variant="unstyled"
           disabled={disabled}
           value={value}
           onChange={(event) => setValue(event.currentTarget.value)}
@@ -60,18 +61,21 @@ export function ChatComposer({ disabled = false, onSend }: ChatComposerProps) {
           placeholder={
             disabled ? 'O entrevistador está respondendo…' : 'Escreva sua resposta…'
           }
+          classNames={{ input: classes.input }}
+          styles={{ input: { paddingInline: 8, fontSize: 14.5, lineHeight: 1.6 } }}
         />
         <ActionIcon
-          size={42}
-          radius="lg"
-          color="terracotta"
+          size={40}
+          radius="md"
+          variant="transparent"
           disabled={!canSend}
           onClick={send}
           aria-label="Enviar mensagem"
+          className={canSend ? classes.sendButton : classes.sendButtonDisabled}
         >
           <SendIcon />
         </ActionIcon>
-      </Group>
+      </div>
       <Text c="dimmed" size="xs" ta="center">
         Enter envia · Shift+Enter quebra linha — o Sieve organiza o resto.
       </Text>

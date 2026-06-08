@@ -1,3 +1,11 @@
+.assistantBubble {
+  background-color: #fff;
+  border: 1px solid #e8e3d9;
+  box-shadow:
+    0 1px 2px rgba(60, 42, 28, 0.05),
+    0 2px 6px -1px rgba(60, 42, 28, 0.05);
+}
+
 .dots {
   display: inline-flex;
   align-items: center;
@@ -8,7 +16,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background-color: var(--mantine-color-gray-5);
+  background-color: #c6bdac;
   animation: bounce 1.2s infinite ease-in-out;
 }
 

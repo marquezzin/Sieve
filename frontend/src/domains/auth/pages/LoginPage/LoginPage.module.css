@@ -1,0 +1,87 @@
+.root {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--mantine-color-body);
+}
+
+.brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 44%;
+  max-width: rem(560px);
+  padding: rem(48px);
+  overflow: hidden;
+  color: var(--mantine-color-white);
+  background: linear-gradient(
+    135deg,
+    var(--mantine-color-terracotta-5) 0%,
+    var(--mantine-color-terracotta-7) 55%,
+    var(--mantine-color-terracotta-9) 100%
+  );
+}
+
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.blobTop {
+  top: rem(-40px);
+  right: rem(-80px);
+  width: rem(320px);
+  height: rem(320px);
+}
+
+.blobBottom {
+  bottom: rem(-60px);
+  right: rem(40px);
+  width: rem(208px);
+  height: rem(208px);
+}
+
+.brandContent {
+  position: relative;
+}
+
+.form {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: rem(24px);
+}
+
+.formInner {
+  width: 100%;
+  max-width: rem(400px);
+}
+
+.logoMark {
+  display: grid;
+  place-items: center;
+  width: rem(36px);
+  height: rem(36px);
+  border-radius: rem(11px);
+  flex-shrink: 0;
+}
+
+.logoMarkBrand {
+  background-color: rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  color: var(--mantine-color-white);
+}
+
+.logoMarkForm {
+  color: var(--mantine-color-white);
+  background: linear-gradient(
+    135deg,
+    var(--mantine-color-terracotta-5),
+    var(--mantine-color-terracotta-8)
+  );
+  box-shadow: 0 2px 8px rgba(207, 85, 48, 0.45);
+}
