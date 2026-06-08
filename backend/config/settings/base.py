@@ -48,6 +48,7 @@ LOCAL_APPS = [
     "core.apps.CoreConfig",
     "healthcheck.apps.HealthcheckConfig",
     "knowledge.apps.KnowledgeConfig",
+    "accounts.apps.AccountsConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

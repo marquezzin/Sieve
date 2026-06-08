@@ -53,7 +53,7 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = []
 
 [tool.ruff.lint.isort]
-known-first-party = ["config", "core", "integrations", "healthcheck", "knowledge"]
+known-first-party = ["config", "core", "integrations", "healthcheck", "knowledge", "accounts"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.test"

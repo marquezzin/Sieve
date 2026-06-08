@@ -51,3 +51,7 @@ with contextlib.suppress(ImportError):
 # `knowledge` app — endpoint de debug em /api/v1/knowledge/status/ (IsAdminUser).
 with contextlib.suppress(ImportError):
     urlpatterns.append(path("api/v1/knowledge/", include("knowledge.api.urls")))
+
+# `accounts` app — perfil do candidato em /api/v1/accounts/me/.
+with contextlib.suppress(ImportError):
+    urlpatterns.append(path("api/v1/accounts/", include("accounts.api.urls")))
