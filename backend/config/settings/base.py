@@ -49,6 +49,8 @@ LOCAL_APPS = [
     "healthcheck.apps.HealthcheckConfig",
     "knowledge.apps.KnowledgeConfig",
     "accounts.apps.AccountsConfig",
+    "chat.apps.ChatConfig",
+    "agents.apps.AgentsConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
