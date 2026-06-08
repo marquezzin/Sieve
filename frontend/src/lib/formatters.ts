@@ -8,6 +8,17 @@ const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
 
 const relativeFormatter = new Intl.RelativeTimeFormat('pt-BR', { numeric: 'auto' });
 
+const timeFormatter = new Intl.DateTimeFormat('pt-BR', {
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+export function formatTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return timeFormatter.format(d);
+}
+
 export function formatDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;

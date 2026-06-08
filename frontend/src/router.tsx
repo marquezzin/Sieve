@@ -12,6 +12,9 @@ const DashboardPage = lazy(() =>
 const HealthcheckListPage = lazy(() =>
   import('@/domains/healthcheck').then((m) => ({ default: m.HealthcheckListPage })),
 );
+const ChatPage = lazy(() =>
+  import('@/domains/chat').then((m) => ({ default: m.ChatPage })),
+);
 
 const withSuspense = (node: ReactNode) => (
   <Suspense fallback={<FullPageLoader />}>{node}</Suspense>
@@ -33,6 +36,10 @@ export const router = createBrowserRouter([
       {
         path: 'healthcheck',
         element: withSuspense(<HealthcheckListPage />),
+      },
+      {
+        path: 'chat',
+        element: withSuspense(<ChatPage />),
       },
     ],
   },
