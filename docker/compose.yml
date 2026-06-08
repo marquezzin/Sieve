@@ -17,7 +17,9 @@ services:
       - "-c"
       - "max_connections=300"
     ports:
-      - "127.0.0.1:5432:5432"
+      # Lado do host parametrizado pra evitar conflito com outros stacks locais
+      # (ex: outro projeto já em 5432). Porta interna do container segue 5432.
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       # Postgres 18+ (incluindo pgvector/pgvector:pg18) recomenda mount no
       # diretório pai /var/lib/postgresql — o Postgres cria internamente o
@@ -52,8 +54,9 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      # Host parametrizado (API + console) pra não colidir com outro MinIO local.
+      - "${MINIO_API_HOST_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_HOST_PORT:-9001}:9001"
     volumes:
       - miniodata:/data
     healthcheck:
@@ -85,7 +88,8 @@ services:
       - ../knowledge_base:/knowledge_base
     command: uv run python manage.py runserver 0.0.0.0:8000
     ports:
-      - "8000:8000"
+      # Host parametrizado; runserver segue em 8000 dentro do container.
+      - "${BACKEND_HOST_PORT:-8000}:8000"
     networks:
       - default
 
@@ -141,7 +145,9 @@ services:
       - frontend_node_modules:/app/node_modules
     command: pnpm dev --host 0.0.0.0
     ports:
-      - "5173:5173"
+      # Host parametrizado; Vite segue em 5173 dentro do container. O mapeamento
+      # host→container preserva o HMR (browser conecta no host, encaminha pro 5173).
+      - "${FRONTEND_HOST_PORT:-5173}:5173"
     networks:
       - default
 
