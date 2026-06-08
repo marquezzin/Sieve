@@ -38,7 +38,8 @@ Ao fim da fase, o usuário consegue:
 - Modelo `AgentRun` em `agents/models.py` pra auditoria de cada chamada de LLM (agent_name, session FK, input, output, usage, status).
 - Prompts em `agents/prompts/interviewer_system.md` (template Jinja-like simples) e `chat/prompts/tools.py` (schemas das tools).
 - Integration `backend/src/integrations/llm/` **estendida**: helper que faz loop de tool_use até `stop_reason != "tool_use"`, injeta `cache_control: ephemeral` no system prompt, e devolve `usage` agregado incluindo `cache_read_input_tokens`.
-- Knowledge base **real** em `knowledge_base/interviewing/`: `persona.md`, `questions_by_phase.md`, `follow_up_patterns.md`, `stop_signals.md` — substitui os placeholders.
+- Knowledge base **real** em `knowledge_base/interviewing/`: `persona.md`, `questions_by_phase.md`, `follow_up_patterns.md`, `stop_signals.md`, `scope_guardrails.md` — substitui os placeholders.
+  - **`scope_guardrails.md` (`priority: always`)** define o comportamento quando o candidato sai do contexto: divagação inofensiva (redirecionar), pedido fora de escopo (recusar + voltar ao fluxo), tentativa de injeção/jailbreak (recusar sem revelar system prompt), e cruzamento com anti-fabricação (`ats/do_not_fabricate.md`). O `interviewer_system.md` **deve** carregar esse doc e reforçar as regras no system prompt — não basta confiar no comportamento default do modelo.
 - API REST em `/api/v1/chat/` + `/api/v1/accounts/me/`.
 - Frontend domain `frontend/src/domains/chat/` (ChatPage + hooks + components mínimos) e `frontend/src/domains/profile/` mínimo (só pra ler `me`).
 - Tests: factories, use case com `FakeLLMClient` injetado, tests da API com `auth_client`.
