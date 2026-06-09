@@ -3,6 +3,7 @@
 ## Responsabilidade
 
 - Login (username + password) → recebe `{ access, refresh }` do endpoint `/api/v1/token/`.
+- Cadastro público (username + email + password) → `POST /api/v1/accounts/register/`, que já devolve `{ access, refresh }` (sem segundo round-trip no `/token/`). Mesma tela do login, aba "Cadastre-se" com transição.
 - Persistir tokens em `localStorage` (`syn_access`, `syn_refresh`).
 - Expor o **único** `apiClient` axios usado pelo app inteiro.
 - Refresh silencioso de access token via `/api/v1/token/refresh/`.
@@ -11,8 +12,8 @@
 
 ## O que fica fora
 
-- Cadastro de usuário (não escopado nesse template).
-- Recuperação de senha (idem).
+- Recuperação de senha (não escopado ainda).
+- Confirmação de e-mail / verificação de conta (idem).
 - Permissions/RBAC granular (cada domain consome sua API; backend valida).
 
 ## Layout
@@ -24,12 +25,13 @@ auth/
 ├── api/
 │   ├── client.ts                        ← apiClient único (NÃO duplicar em outro domain)
 │   ├── config.ts                        ← API_BASE_URL
-│   └── index.ts                         ← login(), logout(), getMe()
+│   └── index.ts                         ← login(), register(), logout(), getMe()
 ├── components/
 │   └── ProtectedRoute/
 │       └── ProtectedRoute.tsx           ← guard + AppShellTemplate
 ├── hooks/
 │   ├── useLogin.ts                      ← useMutation wrapper
+│   ├── useRegister.ts                   ← useMutation wrapper (cadastro)
 │   └── useLogout.ts                     ← hook que limpa tokens + redirect
 ├── pages/
 │   └── LoginPage/
