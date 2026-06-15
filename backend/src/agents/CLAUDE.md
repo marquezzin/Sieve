@@ -14,9 +14,31 @@ persiste resultado — **sem framework de orquestração**.
   `integrations.llm.tool_use.run_tool_use_loop` com as tools de `chat.prompts.tools`
   → persiste resposta + muta a sessão (collected_data/current_phase) → grava `AgentRun`.
 - **`prompts/interviewer_system.md`** — template; `{{KNOWLEDGE_BASE}}` é substituído
-  pela KB em runtime. Estático (cache-safe) — estado dinâmico vem da conversa.
+  pela KB e `{{CURRENT_DATE}}` pela data de hoje (pra resolver datas relativas tipo
+  "ano que vem" e evitar `end` no passado com `status: in_progress`). Fora isso é
+  estático (cache-safe) — estado dinâmico vem da conversa.
+- **Higiene do `collected_data`** — as tools `record_education`/`record_experience`/
+  `record_project` fazem **upsert por chave natural** (`_upsert` em
+  `run_interviewer_turn.py`): institution+course / company+role / name. Isso impede
+  duplicatas quando o modelo chama a mesma tool duas vezes e permite refinar uma
+  entrada sem duplicá-la. Anti-fabricação de datas é reforçada no system prompt + nos
+  schemas das tools (`chat/prompts/tools.py`): só registrar `start`/`end` informados.
+- **Sync com o perfil** — a tool `record_personal_info` espelha os campos
+  sobrepostos (location/phone/linkedin_url/github_url) no `CandidateProfile` via
+  `accounts.services.sync_profile_from_personal_info`. O resto (experiências,
+  educação, projetos, skills) fica só no `collected_data` até a Fase 2. A escrita
+  do perfil é responsabilidade do app `accounts` — nunca tocar no model direto.
 - **`models.py: AgentRun`** — auditoria de cada chamada (agent_name, session,
   input/output, usage, status/error). Read-only no admin.
+
+## Atomicidade do turno
+
+`execute()` roda o turno inteiro dentro de `transaction.atomic()`: a mensagem do
+usuário, a resposta do assistant e as mutações da sessão são gravadas como uma
+unidade. Se o turno falhar no meio (LLMError, disconnect), o rollback desfaz tudo
+— **não sobra mensagem de usuário "pendurada"** (que corromperia o histórico com
+dois `user` seguidos). O `AgentRun` de erro é gravado **fora** da transação, pra
+preservar a auditoria mesmo no rollback.
 
 ## Dependências injetadas (testabilidade)
 

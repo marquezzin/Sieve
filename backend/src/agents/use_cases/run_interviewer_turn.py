@@ -13,6 +13,10 @@ com fakes — sem mock de framework.
 from pathlib import Path
 from typing import Any
 
+from django.db import transaction
+from django.utils import timezone
+
+from accounts.services import sync_profile_from_personal_info
 from agents.models import AgentRun
 from chat.models import ChatMessage, InterviewSession
 from chat.prompts.tools import INTERVIEWER_TOOLS
@@ -25,9 +29,28 @@ from knowledge.services.loader import KnowledgeLoader
 AGENT_NAME = "interviewer"
 _PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "interviewer_system.md"
 _KB_PLACEHOLDER = "{{KNOWLEDGE_BASE}}"
+_DATE_PLACEHOLDER = "{{CURRENT_DATE}}"
 _KICKOFF = "[A entrevista está começando. Apresente-se brevemente e comece a coleta de dados pessoais.]"
 _EMPTY_FALLBACK = "Pode me contar um pouco mais?"
 _MAX_ROUNDS = 10
+
+
+def _entry_key(entry: dict, fields: tuple[str, ...]) -> tuple[str, ...]:
+    return tuple(str(entry.get(f) or "").strip().casefold() for f in fields)
+
+
+def _upsert(items: list[dict], new: dict, key_fields: tuple[str, ...]) -> None:
+    """Insere `new` em `items`, ou faz merge se já houver entrada com a mesma
+    chave natural. Evita duplicatas quando o modelo chama a mesma `record_*` tool
+    mais de uma vez (ex.: dois `record_education` idênticos) e permite refinar uma
+    entrada existente sem duplicá-la.
+    """
+    key = _entry_key(new, key_fields)
+    for existing in items:
+        if _entry_key(existing, key_fields) == key:
+            existing.update({k: v for k, v in new.items() if v not in (None, "", [])})
+            return
+    items.append(new)
 
 
 class RunInterviewerTurn:
@@ -39,51 +62,61 @@ class RunInterviewerTurn:
         if session.status == InterviewSession.Status.COMPLETED:
             raise ApplicationError("Sessão já finalizada — não aceita novos turns.")
 
-        self._persist_incoming(session, user_text)
-
-        system = self._build_system()
-        history = self._build_history(session)
-
-        state: dict[str, Any] = {"clarification_msg": None}
-
-        def tool_executor(name: str, tool_input: dict) -> Any:
-            return self._execute_tool(session, state, name, tool_input)
+        starting_phase = session.current_phase
 
         try:
-            result = run_tool_use_loop(
-                client=self._llm,
-                system=system,
-                messages=history,
-                tools=INTERVIEWER_TOOLS,
-                tool_executor=tool_executor,
-                max_rounds=_MAX_ROUNDS,
-            )
+            # Turno atômico: grava msg do usuário + resposta do assistant +
+            # mutações da sessão como uma unidade. Se o turno falhar no meio
+            # (LLM, disconnect), o rollback some com a mensagem do usuário — sem
+            # bolha "pendurada" nem histórico com dois `user` seguidos.
+            with transaction.atomic():
+                self._persist_incoming(session, user_text)
+
+                system = self._build_system()
+                history = self._build_history(session)
+
+                state: dict[str, Any] = {"clarification_msg": None}
+
+                def tool_executor(name: str, tool_input: dict) -> Any:
+                    return self._execute_tool(session, state, name, tool_input)
+
+                result = run_tool_use_loop(
+                    client=self._llm,
+                    system=system,
+                    messages=history,
+                    tools=INTERVIEWER_TOOLS,
+                    tool_executor=tool_executor,
+                    max_rounds=_MAX_ROUNDS,
+                )
+
+                assistant_msg = self._persist_assistant(session, state, result)
+
+                # As tools mutaram collected_data / current_phase in-place.
+                session.save(update_fields=["collected_data", "current_phase", "updated_at"])
+
+                AgentRun.objects.create(
+                    agent_name=AGENT_NAME,
+                    session=session,
+                    input={"phase": starting_phase, "history_len": len(history)},
+                    output={"final_text": result.final_text, "rounds": result.rounds},
+                    usage=result.usage,
+                    status=AgentRun.Status.SUCCESS,
+                )
+            return assistant_msg
         except LLMError as exc:
+            # Transação revertida — nada parcial sobrou. A sessão in-memory pode
+            # ter mutações das tools; recarrega pra refletir o estado real do DB.
+            session.refresh_from_db()
             AgentRun.objects.create(
                 agent_name=AGENT_NAME,
                 session=session,
-                input={"phase": session.current_phase, "history_len": len(history)},
+                input={"phase": starting_phase},
                 output={},
                 usage={},
                 status=AgentRun.Status.ERROR,
                 error=str(exc),
             )
             raise ApplicationError(f"Falha no entrevistador: {exc}") from exc
-
-        assistant_msg = self._persist_assistant(session, state, result)
-
-        # As tools mutaram collected_data / current_phase in-place.
-        session.save(update_fields=["collected_data", "current_phase", "updated_at"])
-
-        AgentRun.objects.create(
-            agent_name=AGENT_NAME,
-            session=session,
-            input={"phase": session.current_phase, "history_len": len(history)},
-            output={"final_text": result.final_text, "rounds": result.rounds},
-            usage=result.usage,
-            status=AgentRun.Status.SUCCESS,
-        )
-        return assistant_msg
 
     # ─── helpers ──────────────────────────────────────────────────────────────
 
@@ -109,7 +142,8 @@ class RunInterviewerTurn:
     def _build_system(self) -> str:
         template = _PROMPT_PATH.read_text(encoding="utf-8")
         kb = self._knowledge.load_for_agent(AGENT_NAME)
-        return template.replace(_KB_PLACEHOLDER, kb)
+        today = timezone.localdate().strftime("%d/%m/%Y")
+        return template.replace(_KB_PLACEHOLDER, kb).replace(_DATE_PLACEHOLDER, today)
 
     def _build_history(self, session: InterviewSession) -> list[dict]:
         return [{"role": msg.role, "content": msg.text} for msg in session.messages.all()]
@@ -118,16 +152,20 @@ class RunInterviewerTurn:
         data = session.collected_data
         if name == "record_personal_info":
             info = data.setdefault("personal_info", {})
-            info.update({k: v for k, v in tool_input.items() if v not in (None, "")})
+            cleaned = {k: v for k, v in tool_input.items() if v not in (None, "")}
+            info.update(cleaned)
+            # Espelha os campos sobrepostos no CandidateProfile do usuário, pra que
+            # a tela de Perfil reflita o que foi coletado na entrevista.
+            sync_profile_from_personal_info(user=session.user, personal_info=cleaned)
             return {"ok": True}
         if name == "record_education":
-            data.setdefault("education", []).append(tool_input)
+            _upsert(data.setdefault("education", []), tool_input, ("institution", "course"))
             return {"ok": True}
         if name == "record_experience":
-            data.setdefault("experiences", []).append(tool_input)
+            _upsert(data.setdefault("experiences", []), tool_input, ("company", "role"))
             return {"ok": True}
         if name == "record_project":
-            data.setdefault("projects", []).append(tool_input)
+            _upsert(data.setdefault("projects", []), tool_input, ("name",))
             return {"ok": True}
         if name == "record_skills":
             data["skills"] = tool_input.get("skills", [])

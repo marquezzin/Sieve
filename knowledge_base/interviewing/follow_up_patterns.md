@@ -38,3 +38,14 @@ complementar depois se quiser."
 - Não sugerir um número ou conquista que o candidato não confirmou (isso seria fabricar —
   ver [`../ats/do_not_fabricate.md`](../ats/do_not_fabricate.md)).
 - Não despejar as quatro perguntas de uma vez; é conversa, não formulário.
+
+## Datas — nunca fabricar
+
+- Só registre `start`/`end` que o candidato informou. Se faltar o início, **omita** o
+  campo — não chute um ano "típico".
+- Converta datas relativas ("ano que vem", "mês passado") usando a data de hoje
+  fornecida no system prompt.
+- Formação/experiência em andamento: `end` é previsão futura ou vazio — nunca uma data
+  no passado (seria incoerente com "ainda curso/trabalho").
+- Registre cada item (formação, experiência, projeto) **uma só vez** — não repita a
+  mesma `record_*` para o mesmo item.

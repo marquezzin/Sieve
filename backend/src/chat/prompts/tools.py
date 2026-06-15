@@ -33,14 +33,30 @@ INTERVIEWER_TOOLS = [
     },
     {
         "name": "record_education",
-        "description": "Registra uma formação acadêmica do candidato.",
+        "description": (
+            "Registra uma formação acadêmica do candidato. Chame UMA vez por "
+            "formação (não repita a mesma). Nunca invente datas: só preencha "
+            "start/end com o que o candidato disse."
+        ),
         "input_schema": {
             "type": "object",
             "properties": {
                 "institution": {"type": "string"},
                 "course": {"type": "string"},
-                "start": {"type": "string", "description": "mês/ano de início (ex: 02/2021)"},
-                "end": {"type": "string", "description": "mês/ano de fim ou previsão"},
+                "start": {
+                    "type": "string",
+                    "description": (
+                        "mês/ano de início (ex: 02/2021). Só se informado — "
+                        "omita se o candidato não disse; nunca invente."
+                    ),
+                },
+                "end": {
+                    "type": "string",
+                    "description": (
+                        "mês/ano de fim ou previsão de conclusão. Se em andamento, "
+                        "é uma data futura ou vazio — nunca uma data no passado."
+                    ),
+                },
                 "status": {"type": "string", "enum": ["in_progress", "done"]},
             },
             "required": ["institution", "course"],
@@ -57,8 +73,14 @@ INTERVIEWER_TOOLS = [
             "properties": {
                 "company": {"type": "string"},
                 "role": {"type": "string"},
-                "start": {"type": "string"},
-                "end": {"type": "string"},
+                "start": {
+                    "type": "string",
+                    "description": "mês/ano de início. Só se informado — nunca invente; omita se não souber.",
+                },
+                "end": {
+                    "type": "string",
+                    "description": "mês/ano de fim. Se ainda trabalha lá, deixe vazio — nunca uma data no passado.",
+                },
                 "location": {"type": "string"},
                 "bullets": {"type": "array", "items": {"type": "string"}},
                 "tech_stack": {"type": "array", "items": {"type": "string"}},
