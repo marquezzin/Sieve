@@ -15,4 +15,8 @@ export {
   Settings,
   Sliders,
   ChevronDown,
+  Check,
+  Camera,
+  MapPin,
+  Upload,
 } from './Icon';
