@@ -10,5 +10,13 @@ export type {
   Message,
   MessageRole,
   Phase,
+  CollectedSummary,
 } from './types';
-export { PHASE_LABELS, PHASE_STEPS, phaseIndex, canFinalize } from './types';
+export {
+  PHASE_LABELS,
+  PHASE_STEPS,
+  phaseIndex,
+  canFinalize,
+  summarizeCollectedData,
+  summaryLine,
+} from './types';

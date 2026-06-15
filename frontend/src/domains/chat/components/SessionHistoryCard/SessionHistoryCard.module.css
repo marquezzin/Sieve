@@ -1,0 +1,18 @@
+.card {
+  cursor: pointer;
+  background-color: #fff;
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 24px rgba(28, 24, 19, 0.08);
+  transform: translateY(-2px);
+  border-color: var(--mantine-color-terracotta-2);
+}
+
+.openHint {
+  align-self: center;
+}

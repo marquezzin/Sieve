@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Badge,
@@ -17,7 +17,9 @@ import { PhaseStepper } from '../../components/PhaseStepper/PhaseStepper';
 import { MessageBubble } from '../../components/MessageBubble/MessageBubble';
 import { TypingIndicator } from '../../components/TypingIndicator/TypingIndicator';
 import { ChatComposer } from '../../components/ChatComposer/ChatComposer';
-import { ChatEmptyState } from '../../components/ChatEmptyState/ChatEmptyState';
+import { SessionHistoryList } from '../../components/SessionHistoryList/SessionHistoryList';
+import { CompletionPanel } from '../../components/CompletionPanel/CompletionPanel';
+import { ArrowLeftIcon } from '../../components/icons';
 import { useSessions } from '../../hooks/useSessions';
 import { useSession } from '../../hooks/useSession';
 import { useCreateSession } from '../../hooks/useCreateSession';
@@ -26,7 +28,19 @@ import { useFinalizeSession } from '../../hooks/useFinalizeSession';
 import { PHASE_LABELS, canFinalize } from '../../types';
 import classes from './ChatPage.module.css';
 
-function ActiveSession({ sessionId }: { sessionId: string }) {
+interface SessionViewProps {
+  sessionId: string;
+  onBack: () => void;
+  onNewInterview: () => void;
+  startingNew: boolean;
+}
+
+function SessionView({
+  sessionId,
+  onBack,
+  onNewInterview,
+  startingNew,
+}: SessionViewProps) {
   const sessionQuery = useSession(sessionId);
   const sendMutation = useSendMessage(sessionId);
   const finalizeMutation = useFinalizeSession(sessionId);
@@ -59,8 +73,19 @@ function ActiveSession({ sessionId }: { sessionId: string }) {
     );
   }
 
-  const isCompleted = session.status === 'completed';
-  const finalizeEnabled = !isCompleted && canFinalize(session.current_phase);
+  // Sessão concluída → experiência de recap (read-only).
+  if (session.status === 'completed') {
+    return (
+      <CompletionPanel
+        session={session}
+        onBack={onBack}
+        onNewInterview={onNewInterview}
+        startingNew={startingNew}
+      />
+    );
+  }
+
+  const finalizeEnabled = canFinalize(session.current_phase);
 
   return (
     <Stack gap={0} h="100%" className={classes.canvas}>
@@ -74,19 +99,23 @@ function ActiveSession({ sessionId }: { sessionId: string }) {
         className={classes.header}
       >
         <Group gap="sm" wrap="nowrap" miw={0}>
+          <Button
+            variant="subtle"
+            color="gray"
+            size="compact-sm"
+            px="xs"
+            onClick={onBack}
+            aria-label="Voltar para as entrevistas"
+          >
+            <ArrowLeftIcon size={18} />
+          </Button>
           <InterviewerAvatar size={38} />
           <Box miw={0}>
             <Group gap="xs">
               <Text fw={700}>Entrevistador Sieve</Text>
-              {isCompleted ? (
-                <Badge color="gray" variant="light">
-                  concluída
-                </Badge>
-              ) : (
-                <Badge color="green" variant="dot">
-                  online
-                </Badge>
-              )}
+              <Badge color="green" variant="dot">
+                online
+              </Badge>
             </Group>
             <Text size="sm" c="dimmed">
               Fase atual:{' '}
@@ -130,7 +159,7 @@ function ActiveSession({ sessionId }: { sessionId: string }) {
       <Box px="md" pt="xs" pb="md" className={classes.composerBar}>
         <Box maw={900} mx="auto" w="100%">
           <ChatComposer
-            disabled={isTyping || isCompleted}
+            disabled={isTyping}
             onSend={(text) => sendMutation.mutate(text)}
           />
         </Box>
@@ -142,16 +171,9 @@ function ActiveSession({ sessionId }: { sessionId: string }) {
 export function ChatPage() {
   const sessionsQuery = useSessions();
   const createMutation = useCreateSession();
-  // id selecionado manualmente (nova sessão recém-criada). Quando null,
-  // caímos na sessão `active` existente — sem setState dentro de effect.
+  // id da sessão aberta. null → lista de entrevistas (estado inicial e
+  // o estado após reload pós-finalização — é o que conserta o "sumiço").
   const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  const existingActive = useMemo(
-    () => sessionsQuery.data?.find((s) => s.status === 'active') ?? null,
-    [sessionsQuery.data],
-  );
-
-  const activeId = selectedId ?? existingActive?.id ?? null;
 
   const handleStart = () => {
     createMutation.mutate(undefined, {
@@ -178,12 +200,24 @@ export function ChatPage() {
       );
     }
 
-    if (activeId) {
-      return <ActiveSession sessionId={activeId} />;
+    if (selectedId) {
+      return (
+        <SessionView
+          sessionId={selectedId}
+          onBack={() => setSelectedId(null)}
+          onNewInterview={handleStart}
+          startingNew={createMutation.isPending}
+        />
+      );
     }
 
     return (
-      <ChatEmptyState onStart={handleStart} loading={createMutation.isPending} />
+      <SessionHistoryList
+        sessions={sessionsQuery.data ?? []}
+        onOpen={setSelectedId}
+        onStart={handleStart}
+        starting={createMutation.isPending}
+      />
     );
   };
 

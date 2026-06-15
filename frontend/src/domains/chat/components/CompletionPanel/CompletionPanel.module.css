@@ -1,0 +1,24 @@
+.scroll {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.banner {
+  background: linear-gradient(135deg, var(--mantine-color-green-0), #fff 70%);
+  border-color: var(--mantine-color-green-1);
+}
+
+.checkTile {
+  box-shadow: 0 6px 18px rgba(64, 192, 87, 0.35);
+}
+
+.phaseNote {
+  background-color: rgba(255, 255, 255, 0.6);
+  border-color: #e8e3d9;
+}
+
+.chevronOpen {
+  display: inline-flex;
+  transform: rotate(90deg);
+  transition: transform 0.15s ease;
+}
