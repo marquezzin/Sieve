@@ -16,10 +16,17 @@ class RegisterSerializer(serializers.Serializer):
 
 
 class CandidateProfileSerializer(serializers.ModelSerializer):
+    # Dados do User só pra exibição (avatar/cabeçalho do perfil). `user` em si
+    # nunca é editável — quem identifica é o `request.user`.
+    email = serializers.EmailField(source="user.email", read_only=True)
+    full_name = serializers.SerializerMethodField()
+
     class Meta:
         model = CandidateProfile
         fields = (
             "id",
+            "email",
+            "full_name",
             "headline",
             "location",
             "phone",
@@ -28,4 +35,7 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         )
-        read_only_fields = ("id", "created_at", "updated_at")
+        read_only_fields = ("id", "email", "full_name", "created_at", "updated_at")
+
+    def get_full_name(self, obj) -> str:
+        return obj.user.get_full_name() or obj.user.get_username()

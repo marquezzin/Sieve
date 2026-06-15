@@ -173,6 +173,8 @@ def test_get_me_returns_profile(auth_client):
     # Serializer expõe estes campos — e nunca `user`.
     assert set(data.keys()) == {
         "id",
+        "email",
+        "full_name",
         "headline",
         "location",
         "phone",
@@ -183,6 +185,8 @@ def test_get_me_returns_profile(auth_client):
     }
     assert "user" not in data
     assert data["id"] == str(auth_client.user.candidate_profile.id)
+    # email/full_name são read-only espelhados do User (cabeçalho do perfil).
+    assert data["email"] == auth_client.user.email
 
 
 @pytest.mark.django_db
