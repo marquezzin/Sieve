@@ -27,8 +27,8 @@ from integrations.embeddings.base import EmbeddingsClient
 from integrations.embeddings.factory import get_embeddings_client
 
 from ..models import KnowledgeChunk, KnowledgeDocument
-from .chunker import Chunk, chunk_markdown
-from .frontmatter import FrontmatterError, ParsedDocument, parse_file
+from .chunker import chunk_markdown
+from .frontmatter import FrontmatterError, parse_file
 
 
 @dataclass

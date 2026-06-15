@@ -14,7 +14,6 @@ por `FakeKnowledgeLoader` sem precisar mock de pgvector.
 """
 from dataclasses import dataclass
 
-from django.conf import settings
 from pgvector.django import CosineDistance
 
 from core.errors import ApplicationError
