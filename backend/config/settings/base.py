@@ -51,6 +51,7 @@ LOCAL_APPS = [
     "accounts.apps.AccountsConfig",
     "chat.apps.ChatConfig",
     "agents.apps.AgentsConfig",
+    "resumes.apps.ResumesConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -131,6 +132,14 @@ EMBEDDINGS_DIM = config("EMBEDDINGS_DIM", default=1024, cast=int)
 KNOWLEDGE_BASE_DIR = BASE_DIR.parent / "knowledge_base"
 KNOWLEDGE_CHUNK_SIZE = config("KNOWLEDGE_CHUNK_SIZE", default=300, cast=int)
 KNOWLEDGE_CHUNK_OVERLAP = config("KNOWLEDGE_CHUNK_OVERLAP", default=50, cast=int)
+
+# ─── Geração de currículo (pipeline multi-agente: writer / reviewer / judge) ──
+# Os agentes do pipeline usam o MESMO LLM do entrevistador (provider `LLM_PROVIDER`,
+# OpenAI por default). Vazio = cai no modelo do provider (`OPENAI_MODEL`); preencha
+# pra subir um agente específico a um modelo mais forte sem mexer nos outros.
+LLM_MODEL_WRITER = config("LLM_MODEL_WRITER", default="")
+LLM_MODEL_REVIEWER = config("LLM_MODEL_REVIEWER", default="")
+LLM_MODEL_JUDGE = config("LLM_MODEL_JUDGE", default="")
 
 # ─── Celery ──────────────────────────────────────────────────────────────────
 CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://localhost:6379/1")

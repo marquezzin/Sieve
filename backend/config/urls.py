@@ -59,3 +59,7 @@ with contextlib.suppress(ImportError):
 # `chat` app — sessões de entrevista + mensagens em /api/v1/chat/.
 with contextlib.suppress(ImportError):
     urlpatterns.append(path("api/v1/chat/", include("chat.api.urls")))
+
+# `resumes` app — currículos gerados + versões + diff + PDF em /api/v1/resumes/.
+with contextlib.suppress(ImportError):
+    urlpatterns.append(path("api/v1/resumes/", include("resumes.api.urls")))

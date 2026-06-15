@@ -1,0 +1,116 @@
+{% spaceless %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>{{ personal_info.name|default:"Currículo" }}</title>
+  <style>
+    /* ATS-safe: sans-serif, sem tabelas, sem colunas, sem imagens.
+       Hierarquia só por headings. Conservador pra browser E WeasyPrint. */
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, Helvetica, "Segoe UI", sans-serif;
+      font-size: 11pt;
+      line-height: 1.4;
+      color: #1a1a1a;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 32px 40px;
+    }
+    h1 { font-size: 22pt; margin: 0 0 4px; }
+    h2 {
+      font-size: 13pt;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid #444;
+      padding-bottom: 3px;
+      margin: 22px 0 10px;
+    }
+    h3 { font-size: 12pt; margin: 12px 0 2px; }
+    p { margin: 4px 0; }
+    ul { margin: 6px 0; padding-left: 20px; }
+    li { margin: 3px 0; }
+    .contact { font-size: 10pt; color: #444; margin: 0 0 4px; }
+    .entry-meta { font-size: 10pt; color: #555; margin: 0 0 4px; }
+    .tech { font-size: 10pt; color: #444; margin: 4px 0 0; }
+    .skills-list { margin: 0; padding: 0; list-style: none; }
+    .skills-list li { display: inline; }
+    .skills-list li:not(:last-child)::after { content: " · "; color: #888; }
+  </style>
+</head>
+<body>
+
+  {% if personal_info.name or summary %}
+  <section>
+    {% if personal_info.name %}<h1>{{ personal_info.name }}</h1>{% endif %}
+    {% if personal_info.email or personal_info.phone or personal_info.location or personal_info.linkedin_url or personal_info.github_url %}
+    <p class="contact">
+      {% if personal_info.email %}{{ personal_info.email }}{% endif %}
+      {% if personal_info.phone %} | {{ personal_info.phone }}{% endif %}
+      {% if personal_info.location %} | {{ personal_info.location }}{% endif %}
+      {% if personal_info.linkedin_url %} | {{ personal_info.linkedin_url }}{% endif %}
+      {% if personal_info.github_url %} | {{ personal_info.github_url }}{% endif %}
+    </p>
+    {% endif %}
+    {% if summary %}<p>{{ summary }}</p>{% endif %}
+  </section>
+  {% endif %}
+
+  {% if experiences %}
+  <section>
+    <h2>Experiência Profissional</h2>
+    {% for exp in experiences %}
+    <h3>{{ exp.role }}{% if exp.company %} — {{ exp.company }}{% endif %}</h3>
+    <p class="entry-meta">
+      {% if exp.start %}{{ exp.start }}{% endif %}{% if exp.end %} – {{ exp.end }}{% endif %}{% if exp.location %} · {{ exp.location }}{% endif %}
+    </p>
+    {% if exp.bullets %}
+    <ul>
+      {% for bullet in exp.bullets %}<li>{{ bullet }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+    {% if exp.tech_stack %}<p class="tech">Tecnologias: {{ exp.tech_stack|join:", " }}</p>{% endif %}
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if education %}
+  <section>
+    <h2>Formação</h2>
+    {% for edu in education %}
+    <h3>{{ edu.course }}{% if edu.institution %} — {{ edu.institution }}{% endif %}</h3>
+    <p class="entry-meta">
+      {% if edu.start %}{{ edu.start }}{% endif %}{% if edu.end %} – {{ edu.end }}{% endif %}{% if edu.status %} · {{ edu.status }}{% endif %}
+    </p>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if skills %}
+  <section>
+    <h2>Habilidades</h2>
+    <ul class="skills-list">
+      {% for skill in skills %}<li>{{ skill }}</li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if projects %}
+  <section>
+    <h2>Projetos</h2>
+    {% for proj in projects %}
+    <h3>{{ proj.name }}</h3>
+    {% if proj.description %}<p>{{ proj.description }}</p>{% endif %}
+    {% if proj.bullets %}
+    <ul>
+      {% for bullet in proj.bullets %}<li>{{ bullet }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+    {% if proj.tech_stack %}<p class="tech">Tecnologias: {{ proj.tech_stack|join:", " }}</p>{% endif %}
+    {% endfor %}
+  </section>
+  {% endif %}
+
+</body>
+</html>
+{% endspaceless %}
