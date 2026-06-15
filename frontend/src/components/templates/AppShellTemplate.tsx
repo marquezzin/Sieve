@@ -27,7 +27,6 @@ import {
   Menu as MenuIcon,
   Search,
   Settings,
-  Sliders,
   Sparkles,
   User,
 } from '@/components/atoms/Icon';
@@ -52,11 +51,10 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Início', icon: Home, to: '/', end: true },
   { label: 'Chat', icon: Chat, to: '/chat', tag: 'IA' },
-  { label: 'Healthcheck', icon: Sliders, to: '/healthcheck' },
   { label: 'Currículos', icon: File, soon: true },
   { label: 'Vagas', icon: Briefcase, soon: true },
   { label: 'Candidaturas', icon: Kanban, count: 5, soon: true },
-  { label: 'Perfil', icon: User, soon: true },
+  { label: 'Perfil', icon: User, to: '/profile' },
 ];
 
 const HEADER_BG = 'rgba(250, 247, 242, 0.9)';
@@ -167,7 +165,7 @@ function UserAvatar({ size = 30 }: { size?: number }) {
 // Item de nav no estilo "Airbnb category": ícone empilhado + label + underline.
 function TopNavItem({ item }: { item: NavItem }) {
   const iconNode = (
-    <Box pos="relative">
+    <Box pos="relative" style={{ display: 'flex', lineHeight: 0 }}>
       <item.icon size={21} />
       {item.count != null && (
         <Badge
@@ -185,7 +183,7 @@ function TopNavItem({ item }: { item: NavItem }) {
 
   const labelNode = (
     <Group gap={4} wrap="nowrap">
-      <Text fz={12} fw={700} style={{ whiteSpace: 'nowrap' }}>
+      <Text fz={12} fw={700} lh={1} style={{ whiteSpace: 'nowrap' }}>
         {item.label}
       </Text>
       {item.tag && (
@@ -212,9 +210,9 @@ function TopNavItem({ item }: { item: NavItem }) {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 6,
+          gap: 5,
           flexShrink: 0,
-          padding: '8px 8px 10px',
+          padding: '6px 8px',
           minWidth: 68,
           color: 'var(--mantine-color-gray-7)',
           opacity: 0.45,
@@ -237,9 +235,9 @@ function TopNavItem({ item }: { item: NavItem }) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 6,
+        gap: 5,
         flexShrink: 0,
-        padding: '8px 8px 10px',
+        padding: '6px 8px',
         minWidth: 68,
         position: 'relative',
         color: isActive ? '#221d17' : 'var(--mantine-color-gray-6)',
@@ -356,8 +354,8 @@ export function AppShellTemplate({ children }: AppShellTemplateProps) {
               <Menu.Dropdown>
                 <Menu.Label>Minha conta</Menu.Label>
                 <Menu.Item
-                  disabled
                   leftSection={<User size={17} />}
+                  onClick={() => navigate('/profile')}
                 >
                   Meu perfil
                 </Menu.Item>
@@ -380,12 +378,13 @@ export function AppShellTemplate({ children }: AppShellTemplateProps) {
           </Group>
         </Group>
 
-        {/* Row 2 — nav horizontal + filtros */}
+        {/* Row 2 — nav horizontal */}
         <Group
-          h={60}
+          h={56}
           px={{ base: 'md', lg: 'xl' }}
           gap="xs"
           wrap="nowrap"
+          align="center"
           style={{ borderTop: '1px solid var(--mantine-color-gray-1)' }}
         >
           <ScrollArea
@@ -400,29 +399,6 @@ export function AppShellTemplate({ children }: AppShellTemplateProps) {
               ))}
             </Group>
           </ScrollArea>
-          <UnstyledButton
-            aria-disabled
-            style={{
-              flexShrink: 0,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              height: 40,
-              padding: '0 14px',
-              borderRadius: 'var(--mantine-radius-md)',
-              border: '1px solid var(--mantine-color-gray-3)',
-              backgroundColor: '#fff',
-              fontSize: 13,
-              fontWeight: 700,
-              color: '#221d17',
-              cursor: 'default',
-            }}
-          >
-            <Sliders size={15} />
-            <Text fz={13} fw={700} visibleFrom="sm">
-              Filtros
-            </Text>
-          </UnstyledButton>
         </Group>
       </AppShell.Header>
 

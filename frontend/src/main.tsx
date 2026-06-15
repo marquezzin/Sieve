@@ -1,7 +1,15 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
-import { MantineProvider, createTheme, type MantineColorsTuple } from '@mantine/core';
+import {
+  Input,
+  MantineProvider,
+  TextInput,
+  Textarea,
+  createTheme,
+  type MantineColorsTuple,
+  type MantineThemeComponent,
+} from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { ModalsProvider } from '@mantine/modals';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -40,6 +48,32 @@ const gray: MantineColorsTuple = [
   '#221d17',
 ];
 
+// Fidelidade ao protótipo (`ui.jsx` → `inputCls`): inputs 44px (`h-11`),
+// radius 12px (`rounded-xl`), borda `gray.3`, texto 14px, foco terracota.
+// Aplicado no nível do tema (via CSS vars do Input) para TODOS os forms herdarem
+// o look do protótipo. Usamos `vars` em vez de `styles` para que a variante
+// `unstyled` (ex.: ChatComposer) continue sem borda/fundo — ela ignora estas
+// vars e zera borda/fundo nas próprias regras.
+const inputBaseVars: NonNullable<MantineThemeComponent['vars']> = () => ({
+  wrapper: {
+    '--input-height': '44px',
+    '--input-radius': '12px',
+    '--input-bd': 'var(--mantine-color-gray-3)',
+    '--input-fz': '14px',
+    '--input-bg': 'var(--mantine-color-white)',
+  },
+});
+
+// Label do protótipo (`Field`): 13px, bold (700), tom `gray.8`, margem 6px.
+const inputLabelStyles = {
+  label: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: 'var(--mantine-color-gray-8)',
+    marginBottom: 6,
+  },
+} as const;
+
 const theme = createTheme({
   primaryColor: 'terracotta',
   colors: { terracotta, gray },
@@ -49,6 +83,31 @@ const theme = createTheme({
   headings: {
     fontFamily: '"Bricolage Grotesque", "Hanken Grotesk", sans-serif',
     fontWeight: '800',
+  },
+  components: {
+    Input: Input.extend({
+      defaultProps: { size: 'md' },
+      vars: inputBaseVars,
+    }),
+    TextInput: TextInput.extend({
+      defaultProps: { size: 'md' },
+      vars: inputBaseVars,
+      styles: inputLabelStyles,
+    }),
+    Textarea: Textarea.extend({
+      defaultProps: { size: 'md' },
+      // Textarea cresce com o conteúdo: só radius/borda/tipografia, SEM altura
+      // fixa (omitimos `--input-height` pra não quebrar o autosize do composer).
+      vars: () => ({
+        wrapper: {
+          '--input-radius': '12px',
+          '--input-bd': 'var(--mantine-color-gray-3)',
+          '--input-fz': '14px',
+          '--input-bg': 'var(--mantine-color-white)',
+        },
+      }),
+      styles: inputLabelStyles,
+    }),
   },
 });
 

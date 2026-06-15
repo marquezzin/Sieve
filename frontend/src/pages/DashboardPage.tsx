@@ -11,14 +11,11 @@ export function DashboardPage() {
           Bem-vindo ao Sieve
         </Title>
         <Text c="dimmed" ta="center">
-          Próximo passo: criar seu primeiro domain. Use o template{' '}
-          <Text span fw={600}>
-            healthcheck
-          </Text>{' '}
-          como referência de domain consumindo a API.
+          Comece uma entrevista com o agente para coletar os dados do seu
+          currículo.
         </Text>
-        <Button variant="light" onClick={() => navigate('/healthcheck')}>
-          Ver healthcheck
+        <Button variant="light" onClick={() => navigate('/chat')}>
+          Iniciar entrevista
         </Button>
       </Stack>
     </Center>

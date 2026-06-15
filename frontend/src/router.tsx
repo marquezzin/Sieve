@@ -9,11 +9,11 @@ const LoginPage = lazy(() =>
 const DashboardPage = lazy(() =>
   import('@/pages/DashboardPage').then((m) => ({ default: m.DashboardPage })),
 );
-const HealthcheckListPage = lazy(() =>
-  import('@/domains/healthcheck').then((m) => ({ default: m.HealthcheckListPage })),
-);
 const ChatPage = lazy(() =>
   import('@/domains/chat').then((m) => ({ default: m.ChatPage })),
+);
+const ProfilePage = lazy(() =>
+  import('@/domains/profile').then((m) => ({ default: m.ProfilePage })),
 );
 
 const withSuspense = (node: ReactNode) => (
@@ -34,12 +34,12 @@ export const router = createBrowserRouter([
         element: withSuspense(<DashboardPage />),
       },
       {
-        path: 'healthcheck',
-        element: withSuspense(<HealthcheckListPage />),
-      },
-      {
         path: 'chat',
         element: withSuspense(<ChatPage />),
+      },
+      {
+        path: 'profile',
+        element: withSuspense(<ProfilePage />),
       },
     ],
   },
