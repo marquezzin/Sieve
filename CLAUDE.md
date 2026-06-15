@@ -21,7 +21,8 @@ CLAUDE.md                                  ← você está aqui (overview + nave
 │   └── src/healthcheck/CLAUDE.md          ← app exemplo (apagar quando não precisar)
 └── frontend/CLAUDE.md                     ← Vite + React, atomic design, domains, Mantine
     └── src/domains/auth/CLAUDE.md         ← login, JWT, apiClient base
-    └── src/domains/healthcheck/CLAUDE.md  ← domain exemplo
+    └── src/domains/chat/CLAUDE.md         ← entrevistador + histórico de sessões
+    └── src/domains/profile/CLAUDE.md      ← perfil do candidato (porte do protótipo)
 ```
 
 ## Backend ↔ Frontend domain mapping
@@ -31,9 +32,13 @@ Frontend domains são modelados por **intenção do usuário**, não 1:1 com Dja
 | Django app | Frontend domain | O que o usuário vê |
 |---|---|---|
 | `core` | `auth` | login, JWT, refresh |
-| `healthcheck` (exemplo) | `healthcheck` (exemplo) | lista de service checks + disparar run manual |
+| `accounts` | `profile` | ver/editar perfil do candidato (`/me/`) |
+| `chat` + `agents` | `chat` | entrevista conversacional + histórico de sessões |
 
 Adicionar linhas conforme apps novos forem criados.
+
+> O `healthcheck` permanece como **app de exemplo no backend** (`src/healthcheck/`),
+> mas **não tem mais domain no frontend** — removido por não ser usado no produto.
 
 ## Subagentes especialistas
 
@@ -60,6 +65,11 @@ Antes de mudar arquitetura ou scaffoldar módulo novo, leia:
 - [`docs/conceitos-fundamentais.md`](docs/conceitos-fundamentais.md) — embeddings, pgvector, chunking, KnowledgeDocument/Chunk, dois modos de consumo. Leitura obrigatória antes de tocar em agentes ou knowledge base.
 - `backend/CLAUDE.md` — todas as convenções Django/DRF/Celery.
 - `frontend/CLAUDE.md` — todas as convenções React/Mantine/TanStack.
+- [`prototipo/`](prototipo/) — **protótipo de alta fidelidade: referência visual canônica.**
+  Toda tela nova é construída como porte fiel da tela equivalente em
+  `prototipo/src/` para Mantine v9. Ver a seção "Fidelidade ao protótipo" em
+  `frontend/CLAUDE.md`. Na construção inicial, obedecer o protótipo fielmente;
+  refatorar só depois, de forma deliberada.
 
 ## Plano de implementação por fases
 
@@ -72,7 +82,7 @@ Quando o usuário pedir **"faça a próxima fase de implementação"** (ou simil
 
 1. Abrir o índice, identificar a primeira fase com status `🔲 Pendente`.
 2. Abrir o arquivo `fases/fase-N-tema.md` correspondente.
-3. Reler os contextos obrigatórios listados no topo da fase (este `CLAUDE.md`, `backend/CLAUDE.md`, `frontend/CLAUDE.md`, conceitos fundamentais, ADRs ativos).
+3. Reler os contextos obrigatórios listados no topo da fase (este `CLAUDE.md`, `backend/CLAUDE.md`, `frontend/CLAUDE.md`, conceitos fundamentais, ADRs ativos) **e o protótipo da(s) tela(s) da fase em [`prototipo/src/`](prototipo/src/)** — telas novas portam o protótipo fielmente (ver "Fidelidade ao protótipo" em `frontend/CLAUDE.md`).
 4. Executar contra **todos** os critérios de aceite da fase.
 5. Atualizar o spec da fase (status + entrega + decisões divergentes) e o índice ao fim.
 

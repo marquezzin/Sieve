@@ -60,6 +60,39 @@ src/
     └── <novo-domain>/          ← seguir mesmo layout (api/, hooks/, components/, pages/, types/)
 ```
 
+## Fidelidade ao protótipo (REGRA DE CONSTRUÇÃO)
+
+**Toda tela nova é construída como um porte fiel do protótipo em [`../prototipo/`](../prototipo/).**
+O protótipo é a referência visual canônica (handoff `sieve-v2`, exportado do
+Claude Design). Antes de criar/alterar qualquer page ou componente visual:
+
+1. Abra a tela equivalente em `prototipo/src/` (`login.jsx`, `dashboard.jsx`,
+   `chat.jsx`, `resumes.jsx`, `jobs.jsx`, `kanban.jsx`, `profile.jsx`) e os
+   átomos compartilhados em `prototipo/src/ui.jsx` (`Page`, `PageHeader`, `Card`,
+   `Button`, `Avatar`, `Field`, `Input`, `SectionLabel`, `Badge`, `Modal`,
+   `Tabs`, `EmptyState`, `ScoreGauge`…) + `prototipo/src/icons.jsx`.
+2. **Porte para Mantine v9** — o protótipo é HTML/Tailwind; não copie classes.
+   Reproduza layout, hierarquia, espaçamento, tipografia e os estados (loading /
+   vazio / erro / sucesso) usando componentes e props Mantine. Mapeamento usual:
+   `Card`→`Paper withBorder radius`, `Field`→`TextInput`/`Textarea` com label,
+   `Button`→`Button color="terracotta"`, `Badge`→`Badge`, `Page`→conteúdo direto
+   (o `AppShellTemplate` via `ProtectedRoute` já dá o chrome).
+3. **A IDV já está no tema** (`src/main.tsx`): paleta `terracotta` (`#cf5530`),
+   `gray` neutra quente, fontes Bricolage Grotesque / Hanken Grotesk / JetBrains
+   Mono. Use os tokens do tema — **não** hardcode hex (exceto gradientes que o
+   protótipo usa explicitamente, ex. o gradiente do avatar).
+4. **Ícones**: porte de `prototipo/src/icons.jsx` para `@/components/atoms/Icon`
+   (SVG inline). Nunca adicione lib de ícones por causa de um ícone só.
+5. Referência viva já portada: `domains/chat/` e `domains/profile/` — siga o
+   mesmo idioma de porte.
+
+Regra do escopo: **na construção inicial, obedeça o protótipo fielmente.**
+Refatoração/melhoria vem depois, deliberada — não improvise um layout diferente
+"porque ficou mais fácil". Se uma parte da tela pertence a uma fase futura (ex.:
+a foto profissional do `profile.jsx` é Fase 4), renderize um **placeholder claro
+e inerte** com o chrome do protótipo, marcado "Em breve · Fase N" — mantém a
+fidelidade do layout sem puxar escopo de outra fase.
+
 ## Atomic design (curto)
 
 - **atoms** — primitivo visual sem lógica de negócio (`StatusBadge`, `IconButton`).

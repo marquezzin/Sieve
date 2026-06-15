@@ -11,7 +11,8 @@ Quando o usuário disser **"faça a próxima fase de implementação"**:
 3. Reler obrigatoriamente:
    - [`CLAUDE.md`](../../CLAUDE.md) raiz — overview e navegação de subagentes
    - [`backend/CLAUDE.md`](../../backend/CLAUDE.md) — convenções Django/DRF/Celery duras
-   - [`frontend/CLAUDE.md`](../../frontend/CLAUDE.md) — atomic design, domains, Mantine
+   - [`frontend/CLAUDE.md`](../../frontend/CLAUDE.md) — atomic design, domains, Mantine, **fidelidade ao protótipo**
+   - [`prototipo/src/`](../../prototipo/) — **protótipo de alta fidelidade**: abrir a(s) tela(s) da fase e portar fielmente para Mantine (ver "Fidelidade ao protótipo" no `frontend/CLAUDE.md`)
    - [`docs/conceitos-fundamentais.md`](../conceitos-fundamentais.md) — embeddings, pgvector, knowledge base
    - [`docs/decisions/`](../decisions/) — ADRs ativos (0001 stack, 0002 multi-agente sem framework, 0003 knowledge base)
 4. Executar a fase seguindo o spec — usar `TodoWrite` pra rastreio, delegar pros subagentes especialistas indicados.
@@ -22,6 +23,7 @@ Quando o usuário disser **"faça a próxima fase de implementação"**:
 
 ## Convenções globais
 
+- **Fidelidade ao protótipo** — toda tela nova é um **porte fiel** da tela equivalente em [`prototipo/src/`](../../prototipo/) para Mantine v9 (layout, hierarquia, espaçamento, tipografia, estados). A IDV já está no tema (`frontend/src/main.tsx`). Construção inicial obedece o protótipo; refatoração vem depois, deliberada. Parte de tela que pertence a fase futura → placeholder inerte marcado "Em breve · Fase N". Detalhes: "Fidelidade ao protótipo" em `frontend/CLAUDE.md`.
 - **Subagentes especialistas** — delegar trabalho que cai claramente num domínio. Os agentes recomendados estão na seção "Subagentes" de cada fase. Lista completa: `.claude/agents/`.
 - **`make test-fast` é gate obrigatório** — toda fase termina verde.
 - **Conventional Commits** — `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `perf:`, `chore:`, `ci:`.
@@ -33,7 +35,7 @@ Quando o usuário disser **"faça a próxima fase de implementação"**:
 | # | Tema | Status | Arquivo |
 |---|---|---|---|
 | 0 | Fundação: knowledge base + pgvector + embeddings | ✅ Done | [fase-0-fundacao.md](fases/fase-0-fundacao.md) |
-| 1 | Accounts + Chat conversacional + agente entrevistador (MVP draft) | 🔲 Pendente | [fase-1-accounts-chat-entrevistador.md](fases/fase-1-accounts-chat-entrevistador.md) |
+| 1 | Accounts + Chat conversacional + agente entrevistador (MVP draft) | ✅ Done | [fase-1-accounts-chat-entrevistador.md](fases/fase-1-accounts-chat-entrevistador.md) |
 | 2 | Pipeline multi-agente (writer/reviewer/judge) + Resume/versões + PDF | 🔲 Pendente | [fase-2-pipeline-multiagente-pdf.md](fases/fase-2-pipeline-multiagente-pdf.md) |
 | 3 | Matching semântico + ATS optimizer + Kanban de candidaturas | 🔲 Pendente | [fase-3-matching-ats-kanban.md](fases/fase-3-matching-ats-kanban.md) |
 | 4 | Foto profissional + polimento UI + relatório acadêmico + apresentação | 🔲 Pendente | [fase-4-foto-polish-relatorio.md](fases/fase-4-foto-polish-relatorio.md) |

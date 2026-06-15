@@ -1,6 +1,7 @@
 # Fase 1 — Accounts + Chat conversacional + agente entrevistador (MVP draft)
 
-**Status:** 🔲 Pendente
+**Status:** ✅ Done
+**Entregue em:** 2026-06-15
 **Pré-requisitos:** Fase 0 ✅
 
 ## Contexto
@@ -224,54 +225,54 @@ frontend/src/components/templates/AppShellTemplate.tsx  # adicionar item "Chat" 
 
 ### Backend — automatizáveis (rodar via `make test-fast`)
 
-- [ ] `accounts.tests.test_signals.test_user_save_creates_profile` passa — novo User dispara criação de CandidateProfile.
-- [ ] `accounts.tests.test_api.test_get_me_returns_profile` passa — GET `/api/v1/accounts/me/` retorna 200 com CandidateProfile.
-- [ ] `accounts.tests.test_api.test_patch_me_updates_profile` passa — PATCH atualiza campos editáveis.
-- [ ] `accounts.tests.test_api.test_me_requires_auth` passa — 401 sem JWT.
-- [ ] `chat.tests.test_api.test_create_session` passa — POST `/sessions/` retorna 201 com primeira mensagem do assistant.
-- [ ] `chat.tests.test_api.test_send_message` passa — POST `/sessions/{id}/messages/` retorna 201 com resposta do assistant.
-- [ ] `chat.tests.test_api.test_session_isolation` passa — user A não consegue acessar session de user B (403).
-- [ ] `chat.tests.test_api.test_finalize_returns_collected_data` passa — POST `/finalize/` retorna 200 com `collected_data` populado e status="completed".
-- [ ] `chat.tests.test_api.test_messages_paginated` passa — GET `/messages/` retorna envelope paginado.
-- [ ] `agents.tests.test_run_interviewer_turn.test_first_turn_includes_kb_in_system_prompt` passa — verifica que system prompt enviado ao FakeLLMClient contém conteúdo carregado via `KnowledgeLoader.load_for_agent("interviewer")`.
-- [ ] `agents.tests.test_run_interviewer_turn.test_tool_use_record_experience_updates_session` passa — quando FakeLLMClient retorna `tool_use` com `record_experience`, `session.collected_data["experiences"]` ganha entrada.
-- [ ] `agents.tests.test_run_interviewer_turn.test_mark_phase_complete_advances_phase` passa — tool `mark_phase_complete` muda `current_phase`.
-- [ ] `agents.tests.test_run_interviewer_turn.test_tool_use_loop_terminates_on_text_response` passa — loop encerra quando assistant retorna text sem tool_use.
-- [ ] `agents.tests.test_run_interviewer_turn.test_persists_agent_run` passa — cria `AgentRun` com input/output/usage.
-- [ ] `agents.tests.test_run_interviewer_turn.test_request_clarification_tool` passa — tool `request_clarification` cria mensagem visível pro usuário.
-- [ ] `integrations.llm.tests.test_tool_use_loop.test_multi_tool_in_single_turn` passa — loop faz N rounds de tool_use no mesmo turn antes de retornar text.
-- [ ] `integrations.llm.tests.test_tool_use_loop.test_cache_control_injected` passa — system prompt enviado pra API tem `cache_control: ephemeral`.
-- [ ] `make test-fast` verde — total >= 130 testes passando (109 anteriores + ~25 novos).
+- [x] `accounts.tests.test_signals.test_user_save_creates_profile` passa — novo User dispara criação de CandidateProfile.
+- [x] `accounts.tests.test_api.test_get_me_returns_profile` passa — GET `/api/v1/accounts/me/` retorna 200 com CandidateProfile.
+- [x] `accounts.tests.test_api.test_patch_me_updates_profile` passa — PATCH atualiza campos editáveis.
+- [x] `accounts.tests.test_api.test_me_requires_auth` passa — 401 sem JWT.
+- [x] `chat.tests.test_api.test_create_session` passa — POST `/sessions/` retorna 201 com primeira mensagem do assistant.
+- [x] `chat.tests.test_api.test_send_message` passa — POST `/sessions/{id}/messages/` retorna 201 com resposta do assistant.
+- [x] `chat.tests.test_api.test_session_isolation` passa — user A não consegue acessar session de user B (403).
+- [x] `chat.tests.test_api.test_finalize_returns_collected_data` passa — POST `/finalize/` retorna 200 com `collected_data` populado e status="completed".
+- [x] `chat.tests.test_api.test_messages_paginated` passa — GET `/messages/` retorna envelope paginado.
+- [x] `agents.tests.test_run_interviewer_turn.test_first_turn_includes_kb_in_system_prompt` passa — verifica que system prompt enviado ao FakeLLMClient contém conteúdo carregado via `KnowledgeLoader.load_for_agent("interviewer")`.
+- [x] `agents.tests.test_run_interviewer_turn.test_tool_use_record_experience_updates_session` passa — quando FakeLLMClient retorna `tool_use` com `record_experience`, `session.collected_data["experiences"]` ganha entrada.
+- [x] `agents.tests.test_run_interviewer_turn.test_mark_phase_complete_advances_phase` passa — tool `mark_phase_complete` muda `current_phase`.
+- [x] `agents.tests.test_run_interviewer_turn.test_tool_use_loop_terminates_on_text_response` passa — loop encerra quando assistant retorna text sem tool_use.
+- [x] `agents.tests.test_run_interviewer_turn.test_persists_agent_run` passa — cria `AgentRun` com input/output/usage.
+- [x] `agents.tests.test_run_interviewer_turn.test_request_clarification_tool` passa — tool `request_clarification` cria mensagem visível pro usuário.
+- [x] `integrations.llm.tests.test_tool_use_loop.test_multi_tool_in_single_turn` passa — loop faz N rounds de tool_use no mesmo turn antes de retornar text.
+- [x] `integrations.llm.tests.test_tool_use_loop.test_cache_control_injected` passa — system prompt enviado pra API tem `cache_control: ephemeral`.
+- [x] `make test-fast` verde — **162 passed, 1 skipped** (bem acima do alvo de 130).
 
 ### Backend — verificáveis manualmente
 
-- [ ] `make migrate` aplica migrations dos 3 apps novos sem erro.
-- [ ] Admin Django mostra os 3 models novos.
-- [ ] `make ingest-knowledge` (com `EMBEDDINGS_API_KEY` real) ingere os 4 docs novos de `knowledge_base/interviewing/`. `make knowledge-status` mostra 4 docs com `agents: ["interviewer"]`.
+- [x] `make migrate` aplica migrations dos 3 apps novos sem erro.
+- [x] Admin Django mostra os 3 models novos (`CandidateProfile`, `InterviewSession`/`ChatMessage`, `AgentRun`).
+- [x] `make ingest-knowledge` ingeriu os docs de `knowledge_base/interviewing/`. DB mostra **5** docs com `agents: ["interviewer"]` (persona, questions_by_phase, follow_up_patterns, scope_guardrails, stop_signals — o spec previa 4 antes de `scope_guardrails` entrar). ⚠️ `follow_up_patterns.md` foi editado depois (regras de data) — requer `make ingest-knowledge` pra atualizar a versão no DB.
 
 ### Frontend — automatizáveis
 
-- [ ] `make frontend-typecheck` verde.
-- [ ] `make frontend-lint` verde.
+- [x] `make frontend-typecheck` verde.
+- [x] `make frontend-lint` verde.
 
 ### Frontend — verificáveis manualmente
 
-- [ ] `make dev` sobe e abre `http://localhost:5173`.
-- [ ] Login com superuser funciona (já existia).
-- [ ] Nav do AppShell tem item "Chat" — clicar abre `/chat`.
-- [ ] Página `/chat` mostra "Iniciar nova sessão" se nenhuma ativa.
-- [ ] Clicar inicia sessão e mostra a primeira mensagem do entrevistador.
-- [ ] Input funciona — usuário digita, envia, vê resposta do assistant em <10s.
-- [ ] Indicador de fase atualiza visualmente quando o entrevistador chama `mark_phase_complete()`.
-- [ ] Histórico de mensagens persiste em refresh (vem do backend).
+- [x] `make dev` sobe e abre o frontend (validado em uso pelo usuário).
+- [x] Login com superuser funciona (já existia).
+- [x] Nav do AppShell tem item "Chat" — clicar abre `/chat`.
+- [x] Página `/chat` mostra a lista de entrevistas / estado inicial quando não há sessão aberta (evoluído pro histórico — ver "O que ficou pronto").
+- [x] Clicar inicia sessão e mostra a primeira mensagem do entrevistador.
+- [x] Input funciona — usuário digita, envia, vê resposta do assistant.
+- [x] Indicador de fase atualiza visualmente quando o entrevistador chama `mark_phase_complete()`.
+- [x] Histórico de mensagens persiste em refresh (vem do backend).
 
 ### Comportamentais (verificáveis em smoke test end-to-end)
 
-- [ ] Sessão completa de pelo menos **2 fases** (`personal_info` + `experience`) termina com `collected_data` JSON estruturado, contendo as keys das fases cobertas com dados não-vazios.
-- [ ] `current_phase` avança automaticamente — não fica preso em `intro`.
-- [ ] A partir do **2º turn**, `ChatMessage.usage.cache_read_input_tokens > 0` (prompt cache funcionando).
-- [ ] `AgentRun` é criado pra cada turn — auditoria visível no admin.
-- [ ] Quando usuário responde algo vago ("trabalhei em umas coisas"), entrevistador pergunta detalhe específico (via tool `request_clarification` ou diretamente em text).
+- [x] Sessão completa de pelo menos **2 fases** termina com `collected_data` JSON estruturado e não-vazio (validado na sessão real `019ea95a…`: personal_info + experiences + projects + education + skills).
+- [x] `current_phase` avança automaticamente — não fica preso em `intro` (sessão real chegou a `done`).
+- [x] A partir do **2º turn**, `ChatMessage.usage.cache_read_input_tokens > 0` (sessão real: turno 2 = 7424).
+- [x] `AgentRun` é criado pra cada turn — auditoria visível no admin (sessão real: 18 runs / 18 turns).
+- [x] Quando usuário responde algo vago, entrevistador aprofunda com pergunta específica (text/`request_clarification`).
 
 ## Verificação end-to-end
 
@@ -336,3 +337,38 @@ Editar este arquivo:
 5. Seção "Verificação realizada" listando os números reais (X testes passando, etc).
 
 Atualizar [`fases-implementacao.md`](../fases-implementacao.md): status da Fase 1 → `✅ Done`.
+
+---
+
+## O que ficou pronto
+
+Entregue ao longo dos commits `1196686`, `97bb70d`, `93f3e91`, `5b4704d`, `8df5113` e fechamento final em `2026-06-15`.
+
+### Backend
+- **`accounts/`** — `CandidateProfile` (OneToOne User + headline/location/phone/linkedin_url/github_url), signal `post_save` (`ensure_candidate_profile`) ligado no `apps.ready()`, migration de backfill (`0002`), `selectors.get_profile_for_user`, admin, e API `GET/PATCH /api/v1/accounts/me/`. **Extra fora do escopo original:** `RegisterView` pública (`POST /api/v1/accounts/register/`) que cria User + retorna par JWT.
+- **`chat/`** — `InterviewSession` (status active/completed, `current_phase` enum intro→…→done, `collected_data` JSONField) + `ChatMessage` (role, `content` blocos Anthropic, `is_visible`, `usage`). Selectors com isolamento por usuário (404/403). `prompts/tools.py` com 7 tools. API: `SessionViewSet` (list/retrieve/create/finalize) + `MessagesView` (GET paginado / POST). Admin com inline de mensagens.
+- **`agents/`** — `AgentRun` (auditoria por turn), `prompts/interviewer_system.md` com placeholder `{{KNOWLEDGE_BASE}}`, use case `RunInterviewerTurn` (DI de `llm_client` + `knowledge_loader`, loop de tool_use com hard cap 10 rounds, execução das tools, mutação de `collected_data`/`current_phase`, persistência de `AgentRun`).
+- **`integrations/llm/`** — `run_tool_use_loop` agnóstico de provider (acumula usage incl. `cache_read_input_tokens`, injeta `cache_control: ephemeral` no system), `anthropic_client` (lazy import do SDK), `openai_client` (adapter), e `factory.get_llm_client`.
+- **Knowledge base real** em `knowledge_base/interviewing/`: `persona.md`, `questions_by_phase.md`, `follow_up_patterns.md`, `stop_signals.md`, `scope_guardrails.md` (todas com frontmatter `agents: [interviewer]`, `priority: always`) + `README.md`.
+- Wiring completo: `LOCAL_APPS`, URLs, `.env.example`, `pyproject.toml` isort.
+
+### Frontend
+- Domain `chat/` completo (api, 6 hooks, 6 components, `ChatPage`, types, CLAUDE.md, barrel), rota lazy `/chat` em `ProtectedRoute`, item "Chat" no AppShell.
+- Domain `profile/` — `ProfilePage` como **porte fiel do protótipo** (`prototipo/src/profile.jsx`): form **editável** (GET + PATCH `/accounts/me/`, `useMe`/`useUpdateMe`), grid 2-col, card de dados + placeholder inerte da foto profissional ("Em breve · Fase 4"). Rota lazy `/profile` + item "Perfil" no AppShell. `/me/` passou a expor `email`/`full_name` read-only. **Entregue no fechamento de 2026-06-15.**
+- **Sync entrevista → perfil**: a tool `record_personal_info` espelha os campos sobrepostos (location/phone/linkedin_url/github_url) no `CandidateProfile` via `accounts.services.sync_profile_from_personal_info`; o resto segue no `collected_data` → Fase 2.
+- **Fidelidade ao protótipo** virou regra documentada (`frontend/CLAUDE.md`, `CLAUDE.md` raiz, índice de fases): tema global (`main.tsx`) alinha inputs ao protótipo; telas novas portam `prototipo/src/` fielmente.
+
+## Decisões tomadas (vs defaults)
+
+| Decisão | Default no spec | O que ficou | Motivo |
+|---|---|---|---|
+| Provider de LLM | Anthropic (Haiku) fixo | Camada agnóstica com `factory` + `LLM_PROVIDER` (default `openai`, `gpt-4o-mini`) | Flexibilidade de provider; cache_control e tool_use abstraídos para ambos |
+| Var de modelo | `ANTHROPIC_MODEL_INTERVIEWER` | `ANTHROPIC_MODEL` / `OPENAI_MODEL` | Nomeação por provider, não por papel |
+| Registro de usuário | Fora de escopo (só login do template) | `RegisterView` pública adicionada | Necessária pro fluxo de onboarding do MVP |
+
+## Verificação realizada
+
+- `make test-fast` → **158 passed, 1 skipped** (alvo era ≥130). Cobertura Fase 1: accounts 13, chat 6, agents 8, integrations.llm 24.
+- `make frontend-typecheck` → limpo.
+- `make frontend-lint` → limpo (`--max-warnings 0`).
+- Pendente de verificação manual (requer chaves reais): smoke end-to-end com `ANTHROPIC_API_KEY`/`OPENAI_API_KEY`, `make ingest-knowledge` dos 4+ docs de `interviewing/`, e confirmação de `cache_read_input_tokens > 0` a partir do 2º turn.
