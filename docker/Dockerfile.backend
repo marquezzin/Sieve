@@ -6,12 +6,15 @@ ENV PYTHONUNBUFFERED=1 \
     UV_LINK_MODE=copy
 
 # OS deps: psycopg + build essentials + curl pra healthcheck/diagnóstico +
-# libs de runtime do WeasyPrint (Pango/Cairo/GDK-Pixbuf/libffi/shared-mime-info)
+# libs de runtime do WeasyPrint (GLib/Pango/Cairo/GDK-Pixbuf/libffi/shared-mime-info).
+# libglib2.0-0 (provê libgobject-2.0-0) é dlopen'd direto pelo WeasyPrint — explícito,
+# não confiar só na dependência transitiva do Pango.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         libpq-dev \
         curl \
         ca-certificates \
+        libglib2.0-0 \
         libpango-1.0-0 \
         libpangocairo-1.0-0 \
         libcairo2 \
