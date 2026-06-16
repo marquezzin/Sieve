@@ -15,6 +15,7 @@ import { useForm } from '@mantine/form';
 import { useElementSize, useReducedMotion } from '@mantine/hooks';
 import { useLogin } from '../../hooks/useLogin';
 import { useRegister } from '../../hooks/useRegister';
+import sieveLogo from '@/assets/sieve-logo.png';
 import classes from './LoginPage.module.css';
 
 type AuthMode = 'login' | 'register';
@@ -38,24 +39,6 @@ const STATS: ReadonlyArray<{ value: string; label: string }> = [
   { value: '0–10', label: 'nota do currículo' },
   { value: 'ATS', label: 'otimização' },
 ];
-
-function SieveMark({ size = 19 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-    </svg>
-  );
-}
 
 function UserIcon({ size = 16 }: { size?: number }) {
   return (
@@ -174,9 +157,19 @@ export function LoginPage() {
         <Box className={`${classes.blob} ${classes.blobBottom}`} />
 
         <Group gap="sm" className={classes.brandContent}>
-          <Box className={`${classes.logoMark} ${classes.logoMarkBrand}`}>
-            <SieveMark />
-          </Box>
+          <Box
+            component="img"
+            src={sieveLogo}
+            alt="Sieve"
+            w={36}
+            h={36}
+            style={{
+              borderRadius: '50%',
+              flexShrink: 0,
+              objectFit: 'cover',
+              boxShadow: '0 0 0 1px rgba(255,255,255,0.35)',
+            }}
+          />
           <Text fw={800} fz={22} ff="heading">
             Sieve
           </Text>
@@ -212,9 +205,19 @@ export function LoginPage() {
       <Box className={classes.form}>
         <Box className={classes.formInner}>
           <Group gap="sm" justify="center" mb="xl" hiddenFrom="lg">
-            <Box className={`${classes.logoMark} ${classes.logoMarkForm}`}>
-              <SieveMark />
-            </Box>
+            <Box
+              component="img"
+              src={sieveLogo}
+              alt="Sieve"
+              w={36}
+              h={36}
+              style={{
+                borderRadius: '50%',
+                flexShrink: 0,
+                objectFit: 'cover',
+                boxShadow: '0 2px 8px rgba(207, 85, 48, 0.45)',
+              }}
+            />
             <Text fw={800} fz={22} ff="heading">
               Sieve
             </Text>

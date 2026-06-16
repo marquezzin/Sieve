@@ -19,7 +19,6 @@ import {
   Briefcase,
   Chat,
   File,
-  Filter,
   Home,
   type IconProps,
   Kanban,
@@ -31,6 +30,7 @@ import {
   User,
 } from '@/components/atoms/Icon';
 import { ThemeToggle } from '@/components/atoms/ThemeToggle';
+import sieveLogo from '@/assets/sieve-logo.png';
 
 interface AppShellTemplateProps {
   children: ReactNode;
@@ -66,22 +66,19 @@ function Logo() {
   return (
     <Group gap={10} wrap="nowrap" style={{ userSelect: 'none' }}>
       <Box
+        component="img"
+        src={sieveLogo}
+        alt="Sieve"
         style={{
-          display: 'grid',
-          placeItems: 'center',
           width: 32,
           height: 32,
-          borderRadius: 10,
-          color: '#fff',
+          borderRadius: '50%',
           flexShrink: 0,
-          background:
-            'linear-gradient(135deg, var(--mantine-color-terracotta-5), var(--mantine-color-terracotta-8))',
+          objectFit: 'cover',
           boxShadow:
             '0 2px 8px rgba(207,85,48,.45), inset 0 1px 0 rgba(255,255,255,.25)',
         }}
-      >
-        <Filter size={17} />
-      </Box>
+      />
       <Title
         order={3}
         fw={800}
