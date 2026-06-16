@@ -1,0 +1,111 @@
+/* Chip de ícone "texturizado" — porte fiel do StatCard/ResumeRow do protótipo.
+   IMPORTANTE: o gradiente vive numa regra CSS de verdade. NÃO dá pra usar
+   `light-dark(linear-gradient(...), ...)` inline: a função CSS `light-dark()`
+   só aceita <color>, então um gradiente ali dentro torna a declaração inválida
+   e o navegador a descarta — o chip fica branco (era esse o bug). */
+.chip {
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  /* Light: relevo "elevado" do protótipo (`shadow-sm` + inset highlight no topo). */
+  box-shadow:
+    0 1px 2px rgba(60, 42, 28, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+[data-mantine-color-scheme='dark'] .chip {
+  /* Dark: o protótipo mata a sombra e o brilho — o ring colorido separa o tile. */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Tons (light = gradiente vertical tint → claro + ring fino + ícone no tom) ── */
+
+.terracotta {
+  background-image: linear-gradient(
+    180deg,
+    var(--mantine-color-terracotta-1),
+    var(--mantine-color-terracotta-0)
+  );
+  border-color: var(--mantine-color-terracotta-2);
+  color: var(--mantine-color-terracotta-6);
+}
+
+.blue {
+  background-image: linear-gradient(
+    180deg,
+    var(--mantine-color-blue-1),
+    var(--mantine-color-blue-0)
+  );
+  border-color: var(--mantine-color-blue-2);
+  color: var(--mantine-color-blue-6);
+}
+
+.violet {
+  background-image: linear-gradient(
+    180deg,
+    var(--mantine-color-violet-1),
+    var(--mantine-color-violet-0)
+  );
+  border-color: var(--mantine-color-violet-2);
+  color: var(--mantine-color-violet-6);
+}
+
+.green {
+  background-image: linear-gradient(
+    180deg,
+    var(--mantine-color-green-1),
+    var(--mantine-color-green-0)
+  );
+  border-color: var(--mantine-color-green-2);
+  color: var(--mantine-color-green-7);
+}
+
+.gray {
+  background-image: linear-gradient(
+    180deg,
+    var(--mantine-color-gray-1),
+    var(--mantine-color-gray-0)
+  );
+  border-color: var(--mantine-color-gray-2);
+  color: var(--mantine-color-gray-6);
+}
+
+/* ── Dark: tint CHAPADO do tom + ring colorido visível + ícone claro
+   (bloco "icon tiles in dark" de prototipo/index.html, valores verbatim). ── */
+
+[data-mantine-color-scheme='dark'] .terracotta {
+  background-image: none;
+  background-color: rgba(207, 85, 48, 0.14);
+  border-color: rgba(207, 85, 48, 0.34);
+  color: #ef9b76;
+}
+
+[data-mantine-color-scheme='dark'] .blue {
+  background-image: none;
+  background-color: rgba(34, 139, 230, 0.14);
+  border-color: rgba(34, 139, 230, 0.34);
+  color: #74c0fc;
+}
+
+[data-mantine-color-scheme='dark'] .violet {
+  background-image: none;
+  background-color: rgba(124, 92, 236, 0.16);
+  border-color: rgba(124, 92, 236, 0.36);
+  color: #b197fc;
+}
+
+[data-mantine-color-scheme='dark'] .green {
+  background-image: none;
+  background-color: rgba(64, 192, 87, 0.14);
+  border-color: rgba(64, 192, 87, 0.32);
+  color: #69db7c;
+}
+
+[data-mantine-color-scheme='dark'] .gray {
+  background-image: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #c6bbab;
+}

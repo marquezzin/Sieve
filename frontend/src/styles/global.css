@@ -17,6 +17,26 @@ body {
   font-feature-settings: 'ss01';
 }
 
+/* ── Superfície de card (Paper/Card) ──────────────────────────────────────
+   Mantine pinta todo Paper/Card com `background-color: var(--mantine-color-body)`
+   — no light isso é o creme `#faf7f2` (canvas), no dark é `#16120e` (dark-7,
+   canvas). Em ambos os casos o card fica IMERSO no fundo, sem contraste. O
+   protótipo quer cards BRANCOS sobre o creme (light) e `#211c16` (dark-6) sobre
+   o `#16120e` (dark-7).
+
+   Fazemos isso via `:where()` (especificidade ZERO) para que QUALQUER card que
+   pinte o próprio fundo — gradiente do banner, bolha terracota do chat, tints
+   className — continue vencendo com facilidade. Cards "estruturais" full-bleed
+   (ex.: wrapper da ChatPage) usam `<Box>`/`bg="transparent"` e não são Paper,
+   então não herdam isto. */
+:where(.mantine-Paper-root, .mantine-Card-root) {
+  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-6));
+}
+
+[data-mantine-color-scheme='dark'] :where(.mantine-Paper-root, .mantine-Card-root) {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+}
+
 h1,
 h2,
 h3,
@@ -25,29 +45,52 @@ h4,
   letter-spacing: -0.02em;
 }
 
-/* Canvas pontilhado quente — fundo do app autenticado. */
+/* Canvas do app autenticado: glow terracota no topo (2 camadas, não repete) +
+   textura pontilhada quente (repete). Tudo é `background-image` numa só camada
+   pintada ATRÁS do conteúdo — mesmo tratamento do `.canvas` da ChatPage, que
+   funciona de forma confiável. (Antes o glow vinha de um <div> overlay absoluto
+   que não aparecia nas pages Início/Currículos.) */
 .canvas-bg {
   background-color: #faf7f2;
-  background-image: radial-gradient(circle at 1px 1px, rgba(150, 55, 24, 0.05) 1px, transparent 0);
-  background-size: 26px 26px;
-}
-
-/* Glow terracota no topo do canvas. */
-.glow-top {
-  background:
+  background-image:
     radial-gradient(55% 60% at 82% -10%, rgba(214, 100, 60, 0.12), transparent 60%),
-    radial-gradient(48% 50% at 2% 0%, rgba(232, 124, 82, 0.08), transparent 55%);
+    radial-gradient(48% 50% at 2% 0%, rgba(232, 124, 82, 0.08), transparent 55%),
+    radial-gradient(circle at 1px 1px, rgba(150, 55, 24, 0.05) 1px, transparent 0);
+  /* Glow fixado numa faixa de 360px no topo (mesma ideia do `glow-top` de 288px
+     do protótipo). `auto` esticaria o radial pela altura inteira do Main —
+     quanto mais alto o conteúdo, mais diluído o glow, a ponto de sumir. */
+  background-size:
+    100% 360px,
+    100% 360px,
+    26px 26px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  /* O `AppShell.Main` começa em y=0 (ATRÁS do header fixo) e só empurra o
+     conteúdo com `padding-top: --app-shell-header-offset`. Sem offset, o topo
+     (parte mais forte) do glow some atrás do header — era por isso que só o
+     chat, cujo `.canvas` já nasce abaixo do header, mostrava o brilho. Descemos
+     as 2 camadas de glow pelo mesmo offset do header pra que a faixa brilhante
+     nasça exatamente no topo da área visível de conteúdo, em todas as telas. */
+  background-position:
+    left var(--app-shell-header-offset, 0rem),
+    left var(--app-shell-header-offset, 0rem),
+    top left;
 }
 
 /* Dark mode — espelha html.theme-dark do protótipo: textura mais sutil
    (pontos claros translúcidos) e glow terracota levemente mais intenso. */
 [data-mantine-color-scheme='dark'] .canvas-bg {
   background-color: #16120e;
-  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.045) 1px, transparent 0);
-}
-
-[data-mantine-color-scheme='dark'] .glow-top {
-  background:
+  background-image:
     radial-gradient(55% 60% at 82% -10%, rgba(214, 100, 60, 0.2), transparent 60%),
-    radial-gradient(48% 50% at 2% 0%, rgba(232, 124, 82, 0.11), transparent 55%);
+    radial-gradient(48% 50% at 2% 0%, rgba(232, 124, 82, 0.11), transparent 55%),
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.045) 1px, transparent 0);
+  background-size:
+    100% 360px,
+    100% 360px,
+    26px 26px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  background-position:
+    left var(--app-shell-header-offset, 0rem),
+    left var(--app-shell-header-offset, 0rem),
+    top left;
 }

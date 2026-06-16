@@ -30,4 +30,5 @@ export {
   CheckCircle,
   Lightbulb,
   Alert,
+  Clock,
 } from './Icon';

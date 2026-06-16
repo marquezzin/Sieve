@@ -19,6 +19,7 @@ import {
   Refresh,
   Sparkles,
 } from '@/components/atoms/Icon';
+import { IconChip } from '@/components/atoms/IconChip';
 import { formatRelative } from '@/lib/formatters';
 import { useResumes } from '../../hooks/useResumes';
 import { StatusBadge } from '../../components/StatusBadge/StatusBadge';
@@ -75,21 +76,7 @@ function ResumeCard({ resume }: { resume: Resume }) {
       onClick={() => ready && navigate(`/resumes/${resume.id}`)}
     >
       <Group justify="space-between" align="flex-start" mb="md">
-        <Box
-          style={{
-            display: 'grid',
-            placeItems: 'center',
-            width: 44,
-            height: 44,
-            borderRadius: 12,
-            color: 'var(--mantine-color-terracotta-6)',
-            background:
-              'light-dark(linear-gradient(180deg, var(--mantine-color-terracotta-0), #fff), var(--mantine-color-dark-6))',
-            border: '1px solid var(--mantine-color-terracotta-1)',
-          }}
-        >
-          <File size={19} />
-        </Box>
+        <IconChip icon={File} tone="terracotta" size={44} iconSize={20} />
         <StatusBadge status={resume.status} />
       </Group>
 

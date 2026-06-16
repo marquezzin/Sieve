@@ -8,7 +8,6 @@ import {
   Center,
   Group,
   Loader,
-  Paper,
   ScrollArea,
   Stack,
   Text,
@@ -101,7 +100,7 @@ function SessionView({
   const finalizeEnabled = canFinalize(session.current_phase);
 
   return (
-    <Stack gap={0} h="100%" className={classes.canvas}>
+    <Stack gap={0} h="100%">
       {/* Header da sessão */}
       <Group
         justify="space-between"
@@ -235,14 +234,19 @@ export function ChatPage() {
   };
 
   return (
-    <Paper
-      withBorder
-      radius="md"
+    // Full-bleed sobre o canvas creme (NÃO é um cartão branco): a classe
+    // `.canvas` pinta o creme + glow + textura do protótipo. Box (não Paper)
+    // pra não herdar o fundo branco/dark-6 do override de superfície do tema.
+    <Box
       h="calc(100dvh - 164px)"
       className={classes.canvas}
-      style={{ overflow: 'hidden' }}
+      style={{
+        overflow: 'hidden',
+        borderRadius: 'var(--mantine-radius-md)',
+        border: '1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4))',
+      }}
     >
       {content()}
-    </Paper>
+    </Box>
   );
 }

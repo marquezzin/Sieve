@@ -1,4 +1,4 @@
-import { Badge } from '@mantine/core';
+import { Badge, Box } from '@mantine/core';
 import type { ResumeStatus } from '../../types';
 
 interface StatusBadgeProps {
@@ -25,7 +25,23 @@ const STATUS_MAP: Record<ResumeStatus, StatusVisual> = {
 export function StatusBadge({ status }: StatusBadgeProps) {
   const visual = STATUS_MAP[status];
   return (
-    <Badge color={visual.color} variant="dot" radius="sm">
+    <Badge
+      color={visual.color}
+      variant="light"
+      radius="sm"
+      tt="none"
+      fw={700}
+      leftSection={
+        <Box
+          w={6}
+          h={6}
+          style={{
+            borderRadius: '50%',
+            backgroundColor: `var(--mantine-color-${visual.color}-6)`,
+          }}
+        />
+      }
+    >
       {visual.label}
     </Badge>
   );

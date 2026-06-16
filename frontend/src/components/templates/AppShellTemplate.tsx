@@ -412,19 +412,9 @@ export function AppShellTemplate({ children }: AppShellTemplateProps) {
         </Group>
       </AppShell.Header>
 
-      <AppShell.Main className="canvas-bg" style={{ position: 'relative' }}>
-        <Box
-          className="glow-top"
-          style={{
-            position: 'absolute',
-            insetInline: 0,
-            top: 0,
-            height: 288,
-            pointerEvents: 'none',
-          }}
-        />
-        <Box style={{ position: 'relative' }}>{children}</Box>
-      </AppShell.Main>
+      {/* `canvas-bg` pinta o glow terracota no topo + a textura pontilhada como
+          camadas de background (atrás do conteúdo) — ver styles/global.css. */}
+      <AppShell.Main className="canvas-bg">{children}</AppShell.Main>
     </AppShell>
   );
 }

@@ -94,6 +94,14 @@ const inputLabelStyles = {
   },
 } as const;
 
+// A superfície de card (Paper/Card branco no light / dark-6 no dark sobre o
+// canvas creme/dark-7) é tratada em `styles/global.css` via `:where(...)`
+// (especificidade zero) — NÃO via `styles.root` do tema. Motivo: `styles.root`
+// injeta `background-color` INLINE, que sobrepõe qualquer fundo próprio de um
+// card (gradiente do banner de conclusão, bolha terracota do chat, tints por
+// className), "lavando" tudo de branco. O seletor `:where()` deixa esses
+// classNames vencerem trivialmente, mantendo o card padrão branco/dark-6.
+
 const theme = createTheme({
   primaryColor: 'terracotta',
   colors: { terracotta, gray, dark },
