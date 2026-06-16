@@ -73,15 +73,41 @@ class FakeLLMClient:
         return self._responses.pop(0)
 
 
+class FakeChunk:
+    """Objeto mínimo de chunk de retrieval — só expõe `.content`."""
+
+    def __init__(self, content: str):
+        self.content = content
+
+
 class FakeKnowledgeLoader:
-    """`load_for_agent` retorna uma sentinela — sem DB/embeddings."""
+    """`load_for_agent` retorna uma sentinela — sem DB/embeddings.
+
+    `retrieve_chunks` registra cada chamada em `retrieve_calls` (pra asserts de
+    retrieval) e devolve uma lista de objetos com `.content` (vazia por default,
+    ou canned via `chunks`).
+    """
 
     SENTINEL = "<<KB-INTERVIEWER>>"
 
-    def __init__(self, payload=SENTINEL):
+    def __init__(self, payload=SENTINEL, chunks=None):
         self._payload = payload
+        self._chunks = [FakeChunk(c) if isinstance(c, str) else c for c in (chunks or [])]
         self.calls = []
+        self.retrieve_calls = []
 
     def load_for_agent(self, agent: str) -> str:
         self.calls.append(agent)
         return self._payload
+
+    def retrieve_chunks(self, query, agents, k=5, min_similarity=None, filters=None):
+        self.retrieve_calls.append(
+            {
+                "query": query,
+                "agents": agents,
+                "k": k,
+                "min_similarity": min_similarity,
+                "filters": filters,
+            }
+        )
+        return list(self._chunks)

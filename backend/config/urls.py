@@ -13,6 +13,7 @@ só monta:
 """
 import contextlib
 
+from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import (
@@ -63,3 +64,12 @@ with contextlib.suppress(ImportError):
 # `resumes` app — currículos gerados + versões + diff + PDF em /api/v1/resumes/.
 with contextlib.suppress(ImportError):
     urlpatterns.append(path("api/v1/resumes/", include("resumes.api.urls")))
+
+# django-debug-toolbar — só em DEBUG. As URLs `__debug__/` precisam estar
+# registradas, senão o toolbar quebra com NoReverseMatch ('djdt') ao tentar
+# se injetar em qualquer resposta vinda de INTERNAL_IPS.
+if settings.DEBUG:
+    with contextlib.suppress(ImportError):
+        import debug_toolbar  # noqa: F401
+
+        urlpatterns.append(path("__debug__/", include("debug_toolbar.urls")))

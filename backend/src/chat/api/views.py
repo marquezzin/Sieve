@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from agents.tasks import generate_resume_pipeline
 from agents.use_cases.run_interviewer_turn import RunInterviewerTurn
 from chat.api.serializers import (
     MessageSerializer,
@@ -18,6 +19,7 @@ from chat.selectors import (
     list_visible_messages,
 )
 from core.api.pagination import StandardPagination
+from resumes.use_cases.create_resume import create_resume_for_session
 
 
 class SessionViewSet(viewsets.ViewSet):
@@ -44,7 +46,16 @@ class SessionViewSet(viewsets.ViewSet):
         session.status = InterviewSession.Status.COMPLETED
         session.current_phase = InterviewSession.Phase.DONE
         session.save(update_fields=["status", "current_phase", "updated_at"])
-        return Response(SessionSerializer(session).data)
+
+        # Cria o currículo (status=generating) e dispara o pipeline multi-agente
+        # assíncrono (writer → reviewer → judge). O frontend usa `resume_id` pra
+        # redirecionar e fazer polling enquanto a geração roda.
+        resume = create_resume_for_session(session)
+        generate_resume_pipeline.delay(str(resume.id))
+
+        data = SessionSerializer(session).data
+        data["resume_id"] = str(resume.id)
+        return Response(data)
 
 
 class MessagesView(APIView):

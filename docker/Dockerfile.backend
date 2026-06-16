@@ -5,12 +5,19 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     UV_LINK_MODE=copy
 
-# OS deps: psycopg + build essentials + curl pra healthcheck/diagnóstico
+# OS deps: psycopg + build essentials + curl pra healthcheck/diagnóstico +
+# libs de runtime do WeasyPrint (Pango/Cairo/GDK-Pixbuf/libffi/shared-mime-info)
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         libpq-dev \
         curl \
         ca-certificates \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        libcairo2 \
+        libgdk-pixbuf-2.0-0 \
+        libffi-dev \
+        shared-mime-info \
     && rm -rf /var/lib/apt/lists/*
 
 # uv (gerenciador de deps Python) — copiado da imagem oficial

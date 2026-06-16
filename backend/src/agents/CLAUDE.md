@@ -46,9 +46,49 @@ preservar a auditoria mesmo no rollback.
 `FakeLLMClient` (com `messages_create`) e um `KnowledgeLoader` fake. Sem mock de
 framework.
 
+## Fase 2 — pipeline de currículo (writer → reviewer → judge)
+
+Três agentes **single-shot** (não conversacionais) que rodam em sequência via
+Celery chain. Cada um monta system (persona + KB full-load), faz UMA submissão
+estruturada e persiste no app `resumes`.
+
+- **`use_cases/structured.py`** — `run_structured_agent(client, system, user_content, tool)`.
+  Reusa `run_tool_use_loop` com UMA tool de submissão; captura o `input` que o
+  modelo preenche e devolve `StructuredResult(data, usage, rounds)`. Se o modelo
+  não chamar a tool → `ApplicationError` (melhor falhar que persistir lixo).
+- **`prompts/resume_tools.py`** — schemas das tools: `build_resume_tool()`
+  (`submit_resume`, shape do `structured_data` — writer e reviewer) e
+  `SUBMIT_SCORE_TOOL` (`submit_score`, 6 critérios + feedback). `SCORE_CRITERIA`
+  são as 6 keys canônicas.
+- **`use_cases/run_writer.py`** — `RunWriter().execute(resume=...)`:
+  `session.collected_data` → `structured_data` → `ResumeVersion v1` + HTML.
+  Full-load `load_for_agent("writer")` no system; few-shot via `retrieve_chunks`
+  (best-effort, filtrado por `target_role` quando houver — exceção de embeddings
+  é engolida, não derruba o pipeline). Marca `resume.status=writer_done`.
+- **`use_cases/run_reviewer.py`** — `RunReviewer().execute(version=...)`:
+  `vN` → `vN+1` revisada (verbos, métricas inferíveis, sem clichês), preservando
+  fatos e os `id`s das entradas. `status=reviewer_done`.
+- **`use_cases/run_judge.py`** — `RunJudge().execute(version=...)`: nota 0–10 por
+  critério + feedback → `ResumeScore`. **O `overall` é computado aqui** (não vem
+  do LLM) por `compute_overall()` com `RUBRIC_WEIGHTS` (pesos da rubrica, somam
+  1.0). `status=ready`.
+- **Prompts** (`writer_system.md` / `reviewer_system.md` / `judge_system.md`) —
+  estáticos (cache-safe); `{{KNOWLEDGE_BASE}}` é a KB e (só no writer)
+  `{{CURRENT_DATE}}` a data. Anti-fabricação reforçada em todos.
+- **Modelo** — mesmo provider/modelo do entrevistador (OpenAI por default).
+  Override por agente via `settings.LLM_MODEL_WRITER/REVIEWER/JUDGE` (vazio =
+  herda `OPENAI_MODEL`). `get_llm_client(model=...)`.
+- **Falha** — em `LLMError`/`ApplicationError` cada use case marca
+  `resume.status=failed` + `resume.error`, grava `AgentRun` de erro e **re-raise**
+  (o chain do Celery não dispara os agentes seguintes).
+- **`tasks.py`** (owner: `celery-orchestration`) — `generate_resume_pipeline(resume_id)`
+  encadeia `run_writer_task.s | run_reviewer_task.s | run_judge_task.s`. Disparado
+  por `chat/api/views.py:finalize` via `.delay()` (que cria o `Resume` placeholder
+  antes). Tasks THIN: buscam objeto, chamam 1 use case, retornam o id (str).
+
 ## Patterns / Stop list
 
 - LLM **sempre** via `integrations.llm` (factory/loop) — nunca SDK cru no use case.
-- Loop de tool_use tem hard-cap (`max_rounds=10`) — anti-loop-infinito.
-- Próximos agentes (redator, revisor, juiz, ATS) entram aqui como novos use cases;
-  orquestração entre eles vira **Celery chain** (Fase 2+), não framework.
+- Loop de tool_use tem hard-cap (`max_rounds`) — anti-loop-infinito.
+- Agentes do pipeline: orquestração entre eles é **Celery chain**, não framework
+  (ADR 0002). Próximos agentes (ATS) entram como novos use cases no mesmo padrão.

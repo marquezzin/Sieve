@@ -70,7 +70,18 @@ def test_session_isolation(auth_client):
 
 
 @pytest.mark.django_db
-def test_finalize_returns_collected_data(auth_client):
+def test_finalize_creates_resume_and_dispatches_pipeline(auth_client, monkeypatch):
+    from resumes.models import Resume
+
+    # Patcha o pipeline pra `.delay` não rodar nada (em EAGER chamaria LLM real).
+    calls = []
+
+    class _FakePipeline:
+        def delay(self, resume_id):
+            calls.append(resume_id)
+
+    monkeypatch.setattr("chat.api.views.generate_resume_pipeline", _FakePipeline())
+
     session = InterviewSessionFactory(
         user=auth_client.user,
         collected_data={"personal_info": {"name": "Maria"}},
@@ -81,9 +92,17 @@ def test_finalize_returns_collected_data(auth_client):
 
     body = response.json()
     assert body["success"] is True
-    assert body["data"]["status"] == "completed"
-    assert body["data"]["current_phase"] == "done"
-    assert body["data"]["collected_data"] == {"personal_info": {"name": "Maria"}}
+    data = body["data"]
+    assert data["status"] == "completed"
+    assert data["current_phase"] == "done"
+    assert data["collected_data"] == {"personal_info": {"name": "Maria"}}
+
+    # Um Resume foi criado pro usuário, e seu id voltou no payload.
+    resume = Resume.objects.get(user=auth_client.user, session=session)
+    assert data["resume_id"] == str(resume.id)
+
+    # O pipeline foi disparado 1x com o id do resume.
+    assert calls == [str(resume.id)]
 
 
 @pytest.mark.django_db
