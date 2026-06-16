@@ -30,6 +30,7 @@ import {
   Sparkles,
   User,
 } from '@/components/atoms/Icon';
+import { ThemeToggle } from '@/components/atoms/ThemeToggle';
 
 interface AppShellTemplateProps {
   children: ReactNode;
@@ -57,7 +58,9 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Perfil', icon: User, to: '/profile' },
 ];
 
-const HEADER_BG = 'rgba(250, 247, 242, 0.9)';
+// Header translúcido — cream no light, espresso no dark (espelha
+// `.bg-cream/90` do protótipo).
+const HEADER_BG = 'light-dark(rgba(250, 247, 242, 0.9), rgba(28, 23, 18, 0.82))';
 
 function Logo() {
   return (
@@ -82,7 +85,7 @@ function Logo() {
       <Title
         order={3}
         fw={800}
-        c="#221d17"
+        c="var(--mantine-color-text)"
         style={{ fontSize: 20, letterSpacing: '-0.02em' }}
       >
         Sieve
@@ -102,22 +105,22 @@ function SearchPill() {
         alignItems: 'center',
         height: 48,
         borderRadius: 999,
-        backgroundColor: '#fff',
-        border: '1px solid var(--mantine-color-gray-3)',
+        backgroundColor: 'light-dark(#fff, var(--mantine-color-dark-6))',
+        border: '1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4))',
         boxShadow: '0 1px 2px rgba(60,42,28,.05), 0 2px 6px -1px rgba(60,42,28,.05)',
         paddingLeft: 20,
         paddingRight: 8,
         cursor: 'default',
       }}
     >
-      <Text fz={14} fw={700} c="#221d17">
+      <Text fz={14} fw={700} c="var(--mantine-color-text)">
         Buscar
       </Text>
       <Box
         style={{
           width: 1,
           height: 20,
-          backgroundColor: 'var(--mantine-color-gray-3)',
+          backgroundColor: 'light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4))',
           margin: '0 14px',
         }}
       />
@@ -173,7 +176,7 @@ function TopNavItem({ item }: { item: NavItem }) {
           circle
           color="terracotta"
           pos="absolute"
-          style={{ top: -6, right: -10, border: '2px solid var(--mantine-color-gray-0)' }}
+          style={{ top: -6, right: -10, border: '2px solid var(--mantine-color-body)' }}
         >
           {item.count}
         </Badge>
@@ -214,7 +217,7 @@ function TopNavItem({ item }: { item: NavItem }) {
           flexShrink: 0,
           padding: '6px 8px',
           minWidth: 68,
-          color: 'var(--mantine-color-gray-7)',
+          color: 'light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2))',
           opacity: 0.45,
           cursor: 'default',
         }}
@@ -240,7 +243,9 @@ function TopNavItem({ item }: { item: NavItem }) {
         padding: '6px 8px',
         minWidth: 68,
         position: 'relative',
-        color: isActive ? '#221d17' : 'var(--mantine-color-gray-6)',
+        color: isActive
+          ? 'var(--mantine-color-text)'
+          : 'light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2))',
         transition: 'color .15s ease',
       })}
     >
@@ -256,7 +261,7 @@ function TopNavItem({ item }: { item: NavItem }) {
               bottom: -1,
               height: 2.5,
               borderRadius: 999,
-              backgroundColor: isActive ? '#221d17' : 'transparent',
+              backgroundColor: isActive ? 'var(--mantine-color-text)' : 'transparent',
               transition: 'background-color .15s ease',
             }}
           />
@@ -277,7 +282,8 @@ export function AppShellTemplate({ children }: AppShellTemplateProps) {
           backgroundColor: HEADER_BG,
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          borderBottom: '1px solid var(--mantine-color-gray-2)',
+          borderBottom:
+            '1px solid light-dark(var(--mantine-color-gray-2), rgba(255,255,255,.1))',
         }}
       >
         {/* Row 1 — logo · busca · usuário */}
@@ -307,7 +313,7 @@ export function AppShellTemplate({ children }: AppShellTemplateProps) {
                 borderRadius: 999,
                 fontSize: 13.5,
                 fontWeight: 700,
-                color: '#221d17',
+                color: 'var(--mantine-color-text)',
                 whiteSpace: 'nowrap',
               }}
             >
@@ -316,6 +322,8 @@ export function AppShellTemplate({ children }: AppShellTemplateProps) {
               </Box>
               Nova entrevista
             </UnstyledButton>
+
+            <ThemeToggle />
 
             <Indicator color="terracotta" size={8} offset={6} withBorder>
               <ActionIcon
@@ -341,11 +349,13 @@ export function AppShellTemplate({ children }: AppShellTemplateProps) {
                     paddingLeft: 12,
                     paddingRight: 6,
                     borderRadius: 999,
-                    border: '1px solid var(--mantine-color-gray-3)',
-                    backgroundColor: '#fff',
+                    border:
+                      '1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4))',
+                    backgroundColor:
+                      'light-dark(#fff, var(--mantine-color-dark-6))',
                   }}
                 >
-                  <Box c="gray.7" style={{ display: 'grid', placeItems: 'center' }}>
+                  <Box c="dimmed" style={{ display: 'grid', placeItems: 'center' }}>
                     <MenuIcon size={16} />
                   </Box>
                   <UserAvatar />
@@ -385,7 +395,10 @@ export function AppShellTemplate({ children }: AppShellTemplateProps) {
           gap="xs"
           wrap="nowrap"
           align="center"
-          style={{ borderTop: '1px solid var(--mantine-color-gray-1)' }}
+          style={{
+            borderTop:
+              '1px solid light-dark(var(--mantine-color-gray-1), rgba(255,255,255,.06))',
+          }}
         >
           <ScrollArea
             scrollbars="x"

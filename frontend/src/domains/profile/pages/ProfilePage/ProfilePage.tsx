@@ -27,7 +27,13 @@ function PageHeader() {
       <Text fz={11} fw={700} tt="uppercase" c="terracotta.6" mb={6} style={{ letterSpacing: '0.14em' }}>
         Sua conta
       </Text>
-      <Title order={1} fz={24} fw={800} c="gray.9" style={{ letterSpacing: '-0.02em' }}>
+      <Title
+        order={1}
+        fz={24}
+        fw={800}
+        c="light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0))"
+        style={{ letterSpacing: '-0.02em' }}
+      >
         Perfil
       </Title>
     </Box>
@@ -72,10 +78,14 @@ function ProfileForm({ profile }: { profile: CandidateProfile }) {
       <Group gap="md" wrap="nowrap" pb="lg">
         <ProfileAvatar name={displayName} size={56} />
         <Box miw={0}>
-          <Text fz={17} fw={700} c="gray.9">
+          <Text
+            fz={17}
+            fw={700}
+            c="light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0))"
+          >
             {displayName}
           </Text>
-          <Text fz={13} c="gray.6">
+          <Text fz={13} c="dimmed">
             {profile.email}
           </Text>
         </Box>
@@ -152,12 +162,13 @@ export function ProfilePage() {
   }
 
   return (
-    <>
+    // Container do protótipo (`Page`): centralizado, max-width e gutters laterais.
+    <Box maw={1160} mx="auto" px={{ base: 'sm', lg: 'lg' }} py="md">
       <PageHeader />
       <SimpleGrid cols={{ base: 1, lg: 2 }} spacing={24} style={{ alignItems: 'start' }}>
         <ProfileForm key={meQuery.data.updated_at} profile={meQuery.data} />
         <PhotoStudioPlaceholder />
       </SimpleGrid>
-    </>
+    </Box>
   );
 }

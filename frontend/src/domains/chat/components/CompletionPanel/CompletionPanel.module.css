@@ -22,3 +22,13 @@
   transform: rotate(90deg);
   transition: transform 0.15s ease;
 }
+
+[data-mantine-color-scheme='dark'] .banner {
+  background: linear-gradient(135deg, var(--mantine-color-green-9), #211c16 70%);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-mantine-color-scheme='dark'] .phaseNote {
+  background-color: rgba(33, 28, 22, 0.62);
+  border-color: rgba(255, 255, 255, 0.1);
+}

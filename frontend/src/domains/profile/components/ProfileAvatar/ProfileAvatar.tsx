@@ -27,7 +27,7 @@ export function ProfileAvatar({ name, size = 56 }: ProfileAvatarProps) {
         color: 'var(--mantine-color-white)',
         borderRadius: '50%',
         background: 'linear-gradient(135deg, #e07c52, #b8451f)',
-        boxShadow: '0 0 0 2px #fff, 0 1px 3px rgba(0,0,0,.12)',
+        boxShadow: 'light-dark(0 0 0 2px #fff, 0 0 0 2px #211c16), 0 1px 3px rgba(0,0,0,.12)',
       }}
     >
       {initialsOf(name)}

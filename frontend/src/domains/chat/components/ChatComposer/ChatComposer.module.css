@@ -48,3 +48,17 @@
   background: #f1ede6;
   color: #c6bdac;
 }
+
+[data-mantine-color-scheme='dark'] .card {
+  background-color: #211c16;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-mantine-color-scheme='dark'] .cardDisabled {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-mantine-color-scheme='dark'] .sendButtonDisabled {
+  background: rgba(255, 255, 255, 0.055);
+  color: #8c8271;
+}

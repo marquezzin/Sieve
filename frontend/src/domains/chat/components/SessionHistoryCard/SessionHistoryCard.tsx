@@ -58,7 +58,7 @@ export function SessionHistoryCard({ session, onOpen }: SessionHistoryCardProps)
               · {formatRelative(session.updated_at)}
             </Text>
           </Group>
-          <Text fz="sm" c="#37312a" lineClamp={1}>
+          <Text fz="sm" c="light-dark(#37312a, #e0d6c8)" lineClamp={1}>
             {summaryLine(summary)}
           </Text>
         </Stack>

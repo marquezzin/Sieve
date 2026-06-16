@@ -45,7 +45,11 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           className={`${classes.bubble} ${classes.assistantBubble}`}
           style={{ borderTopLeftRadius: 6 }}
         >
-          <Text size="sm" c="#37312a" style={{ whiteSpace: 'pre-wrap', lineHeight: 1.55 }}>
+          <Text
+            size="sm"
+            c="light-dark(#37312a, #e0d6c8)"
+            style={{ whiteSpace: 'pre-wrap', lineHeight: 1.55 }}
+          >
             {message.text}
           </Text>
         </Paper>

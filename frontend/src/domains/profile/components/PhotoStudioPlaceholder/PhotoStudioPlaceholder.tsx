@@ -10,14 +10,18 @@ export function PhotoStudioPlaceholder() {
   return (
     <Paper withBorder radius="md" p={24}>
       <Group justify="space-between" align="center" mb={4} wrap="nowrap">
-        <Text fz={15} fw={700} c="gray.9">
+        <Text
+          fz={15}
+          fw={700}
+          c="light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0))"
+        >
           Foto profissional
         </Text>
         <Badge color="terracotta" variant="light" radius="sm">
           Em breve · Fase 4
         </Badge>
       </Group>
-      <Text fz={13} c="gray.6" mb="lg">
+      <Text fz={13} c="dimmed" mb="lg">
         Gere uma foto estilo LinkedIn a partir de uma selfie.
       </Text>
 
@@ -30,7 +34,8 @@ export function PhotoStudioPlaceholder() {
           placeItems: 'center',
           textAlign: 'center',
           borderRadius: 16,
-          border: '2px dashed var(--mantine-color-gray-3)',
+          border:
+            '2px dashed light-dark(var(--mantine-color-gray-3), rgba(255, 255, 255, 0.15))',
           opacity: 0.7,
           cursor: 'not-allowed',
         }}
@@ -45,15 +50,20 @@ export function PhotoStudioPlaceholder() {
               width: 56,
               height: 56,
               borderRadius: 16,
-              background: 'var(--mantine-color-terracotta-0)',
+              background:
+                'light-dark(var(--mantine-color-terracotta-0), rgba(207, 85, 48, 0.16))',
             }}
           >
             <Upload size={26} />
           </Box>
-          <Text fz={14} fw={700} c="gray.9">
+          <Text
+            fz={14}
+            fw={700}
+            c="light-dark(var(--mantine-color-gray-9), var(--mantine-color-dark-0))"
+          >
             Arraste uma selfie ou clique para enviar
           </Text>
-          <Text fz={12.5} c="gray.5">
+          <Text fz={12.5} c="dimmed">
             JPG ou PNG · até 5 MB · rosto bem iluminado e centralizado
           </Text>
         </Stack>

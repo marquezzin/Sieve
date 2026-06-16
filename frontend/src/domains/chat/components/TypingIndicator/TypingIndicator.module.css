@@ -28,6 +28,15 @@
   animation-delay: 0.4s;
 }
 
+[data-mantine-color-scheme='dark'] .assistantBubble {
+  background-color: #211c16;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-mantine-color-scheme='dark'] .dot {
+  background-color: #8c8271;
+}
+
 @keyframes bounce {
   0%,
   60%,

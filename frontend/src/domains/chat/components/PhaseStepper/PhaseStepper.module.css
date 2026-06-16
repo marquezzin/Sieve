@@ -90,3 +90,30 @@
 .connectorDone {
   background-color: var(--mantine-color-green-4);
 }
+
+[data-mantine-color-scheme='dark'] .chipActive {
+  background-color: rgba(207, 85, 48, 0.16);
+  border-color: rgba(207, 85, 48, 0.45);
+}
+
+[data-mantine-color-scheme='dark'] .badgeTodo {
+  background-color: rgba(255, 255, 255, 0.055);
+  color: #8c8271;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-mantine-color-scheme='dark'] .labelActive {
+  color: #e69c81;
+}
+
+[data-mantine-color-scheme='dark'] .labelDone {
+  color: #c6bbab;
+}
+
+[data-mantine-color-scheme='dark'] .labelTodo {
+  color: #8c8271;
+}
+
+[data-mantine-color-scheme='dark'] .connector {
+  background-color: rgba(255, 255, 255, 0.1);
+}

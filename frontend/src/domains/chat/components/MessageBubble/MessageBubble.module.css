@@ -14,6 +14,11 @@
   border: 1px solid #e8e3d9;
 }
 
+[data-mantine-color-scheme='dark'] .assistantBubble {
+  background-color: #211c16;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .pop {
     animation: pop 0.25s cubic-bezier(0.2, 0.8, 0.3, 1);

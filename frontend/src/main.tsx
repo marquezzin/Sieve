@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import {
+  ColorSchemeScript,
   Input,
   MantineProvider,
   TextInput,
@@ -48,6 +49,25 @@ const gray: MantineColorsTuple = [
   '#221d17',
 ];
 
+// Tupla `dark` quente (espresso) — fiel ao tema dark do protótipo
+// (`html.theme-dark` em prototipo/index.html). Mantine usa, no dark scheme:
+//   7 = body bg (#16120e), 6 = surface/cards (#211c16), 5 = hover,
+//   4/3 = bordas, 2 = dimmed (#c6bbab), 0 = texto (#f4eee4).
+// Os índices intermediários interpolam entre superfície e texto pra manter o
+// tom marrom-quente em vez do azulado padrão do Mantine.
+const dark: MantineColorsTuple = [
+  '#f4eee4', // 0 — texto principal
+  '#e0d6c8', // 1
+  '#c6bbab', // 2 — dimmed
+  '#8c8271', // 3 — borda forte / placeholder
+  '#574f43', // 4 — borda
+  '#3a332b', // 5 — hover / superfície elevada
+  '#211c16', // 6 — surface / cards
+  '#16120e', // 7 — body / canvas
+  '#120f0b', // 8
+  '#0d0a07', // 9
+];
+
 // Fidelidade ao protótipo (`ui.jsx` → `inputCls`): inputs 44px (`h-11`),
 // radius 12px (`rounded-xl`), borda `gray.3`, texto 14px, foco terracota.
 // Aplicado no nível do tema (via CSS vars do Input) para TODOS os forms herdarem
@@ -58,9 +78,9 @@ const inputBaseVars: NonNullable<MantineThemeComponent['vars']> = () => ({
   wrapper: {
     '--input-height': '44px',
     '--input-radius': '12px',
-    '--input-bd': 'var(--mantine-color-gray-3)',
+    '--input-bd': 'light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4))',
     '--input-fz': '14px',
-    '--input-bg': 'var(--mantine-color-white)',
+    '--input-bg': 'light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))',
   },
 });
 
@@ -69,14 +89,14 @@ const inputLabelStyles = {
   label: {
     fontSize: 13,
     fontWeight: 700,
-    color: 'var(--mantine-color-gray-8)',
+    color: 'light-dark(var(--mantine-color-gray-8), var(--mantine-color-dark-1))',
     marginBottom: 6,
   },
 } as const;
 
 const theme = createTheme({
   primaryColor: 'terracotta',
-  colors: { terracotta, gray },
+  colors: { terracotta, gray, dark },
   defaultRadius: 'md',
   fontFamily: '"Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   fontFamilyMonospace: '"JetBrains Mono", ui-monospace, SFMono-Regular, monospace',
@@ -101,9 +121,9 @@ const theme = createTheme({
       vars: () => ({
         wrapper: {
           '--input-radius': '12px',
-          '--input-bd': 'var(--mantine-color-gray-3)',
+          '--input-bd': 'light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4))',
           '--input-fz': '14px',
-          '--input-bg': 'var(--mantine-color-white)',
+          '--input-bg': 'light-dark(var(--mantine-color-white), var(--mantine-color-dark-6))',
         },
       }),
       styles: inputLabelStyles,
@@ -118,7 +138,8 @@ if (!rootEl) {
 
 createRoot(rootEl).render(
   <StrictMode>
-    <MantineProvider theme={theme}>
+    <ColorSchemeScript defaultColorScheme="light" />
+    <MantineProvider theme={theme} defaultColorScheme="light">
       <Notifications />
       <ModalsProvider>
         <QueryClientProvider client={queryClient}>

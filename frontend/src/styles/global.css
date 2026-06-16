@@ -1,9 +1,19 @@
 /* IDV global do Sieve — fundo cream quente + tipografia display.
    Tokens espelham o protótipo (prototipo/index.html). */
 
+/* Body bg cream no light, espresso no dark — o body var do Mantine é branco/
+   preto puro por padrão, então sobrescrevemos pra manter a IDV quente. */
+:root {
+  --mantine-color-body: #faf7f2;
+}
+
+[data-mantine-color-scheme='dark'] {
+  --mantine-color-body: #16120e;
+}
+
 body {
-  background-color: #faf7f2;
-  color: #1c1813;
+  background-color: var(--mantine-color-body);
+  color: var(--mantine-color-text);
   font-feature-settings: 'ss01';
 }
 
@@ -27,4 +37,17 @@ h4,
   background:
     radial-gradient(55% 60% at 82% -10%, rgba(214, 100, 60, 0.12), transparent 60%),
     radial-gradient(48% 50% at 2% 0%, rgba(232, 124, 82, 0.08), transparent 55%);
+}
+
+/* Dark mode — espelha html.theme-dark do protótipo: textura mais sutil
+   (pontos claros translúcidos) e glow terracota levemente mais intenso. */
+[data-mantine-color-scheme='dark'] .canvas-bg {
+  background-color: #16120e;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.045) 1px, transparent 0);
+}
+
+[data-mantine-color-scheme='dark'] .glow-top {
+  background:
+    radial-gradient(55% 60% at 82% -10%, rgba(214, 100, 60, 0.2), transparent 60%),
+    radial-gradient(48% 50% at 2% 0%, rgba(232, 124, 82, 0.11), transparent 55%);
 }

@@ -19,4 +19,6 @@ export {
   Camera,
   MapPin,
   Upload,
+  Sun,
+  Moon,
 } from './Icon';

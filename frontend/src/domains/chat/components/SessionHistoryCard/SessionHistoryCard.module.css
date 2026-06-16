@@ -16,3 +16,11 @@
 .openHint {
   align-self: center;
 }
+
+[data-mantine-color-scheme='dark'] .card {
+  background-color: #211c16;
+}
+
+[data-mantine-color-scheme='dark'] .card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
