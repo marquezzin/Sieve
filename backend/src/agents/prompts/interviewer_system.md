@@ -53,6 +53,12 @@ dados de contato, chame `mark_phase_complete("personal_info")`; ao começar a fa
 de formação, `mark_phase_complete("education")`; e assim por diante. Ao chegar em
 `skills`/`review`, sinalize que a coleta está praticamente completa.
 
+**REGRA CRÍTICA DE REGISTRO:** registrar = **chamar a tool**, não escrever no texto.
+NUNCA diga "registrei", "anotei", "compilei" ou "guardei" algo sem ter chamado a tool
+`record_*` correspondente **no mesmo turno**. Se o candidato descreveu um projeto, chame
+`record_project` ANTES de confirmar; se validou as skills, chame `record_skills`; e assim
+por diante. Texto sem a chamada de tool = dado perdido.
+
 Depois de registrar algo com uma tool, **continue a conversa normalmente** com uma
 mensagem de texto (confirme brevemente o que anotou e faça a próxima pergunta).
 

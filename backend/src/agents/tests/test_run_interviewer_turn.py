@@ -160,6 +160,60 @@ def test_mark_phase_complete_advances_phase():
 
 
 @pytest.mark.django_db
+def test_phase_reconciled_from_data_when_mark_phase_skipped():
+    # O LLM grava skills mas ESQUECE de chamar mark_phase_complete (o bug do Thales).
+    # A reconciliação pelo dado avança a fase mesmo assim — destrava o botão Finalizar.
+    session = InterviewSessionFactory(current_phase="education")
+    use_case = _make_use_case(
+        [
+            tool_use_response("record_skills", {"skills": ["Python", "SQL"]}),
+            text_response("Skills anotadas!"),  # nenhuma chamada de mark_phase_complete
+        ]
+    )
+
+    use_case.execute(session=session, user_text="uso Python e SQL")
+
+    session.refresh_from_db()
+    assert session.current_phase == "skills"
+
+
+@pytest.mark.django_db
+def test_phase_floor_never_regresses():
+    # Fase já em `experience`; o turno só grava personal_info (piso = personal_info,
+    # índice menor). A reconciliação nunca regride a fase.
+    session = InterviewSessionFactory(current_phase="experience")
+    use_case = _make_use_case(
+        [
+            tool_use_response(
+                "record_personal_info",
+                {"name": "Ana", "email": "a@x.com", "phone": "1", "location": "SP"},
+            ),
+            text_response("Ok!"),
+        ]
+    )
+
+    use_case.execute(session=session, user_text="sou a Ana")
+
+    session.refresh_from_db()
+    assert session.current_phase == "experience"
+
+
+@pytest.mark.django_db
+def test_state_note_injected_in_system_prompt():
+    session = InterviewSessionFactory()
+    fake = FakeLLMClient([text_response("Olá!")])
+    RunInterviewerTurn(llm_client=fake, knowledge_loader=FakeKnowledgeLoader()).execute(
+        session=session, user_text=None
+    )
+
+    assert "ESTADO ATUAL DA ENTREVISTA" in fake.last_system
+    assert "Fase atual no sistema" in fake.last_system
+    # Checklist das seções presente (estado inicial: tudo por coletar).
+    assert "Dados pessoais" in fake.last_system
+    assert "Projetos" in fake.last_system
+
+
+@pytest.mark.django_db
 def test_tool_use_loop_terminates_on_text_response():
     session = InterviewSessionFactory()
     use_case = RunInterviewerTurn(

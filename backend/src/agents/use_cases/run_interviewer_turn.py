@@ -20,6 +20,7 @@ from accounts.services import sync_profile_from_personal_info
 from agents.models import AgentRun
 from chat.models import ChatMessage, InterviewSession
 from chat.prompts.tools import INTERVIEWER_TOOLS
+from chat.services import derive_phase_floor, phase_index, section_status
 from core.errors import ApplicationError
 from integrations.llm.base import LLMError
 from integrations.llm.factory import get_llm_client
@@ -72,7 +73,7 @@ class RunInterviewerTurn:
             with transaction.atomic():
                 self._persist_incoming(session, user_text)
 
-                system = self._build_system()
+                system = self._build_system() + self._build_state_note(session)
                 history = self._build_history(session)
 
                 state: dict[str, Any] = {"clarification_msg": None}
@@ -90,6 +91,11 @@ class RunInterviewerTurn:
                 )
 
                 assistant_msg = self._persist_assistant(session, state, result)
+
+                # Rede de segurança: mesmo que o LLM esqueça `mark_phase_complete`,
+                # a fase nunca fica atrás do que já foi coletado (piso derivado dos
+                # dados). Nunca regride e nunca passa de `skills` automaticamente.
+                self._reconcile_phase(session)
 
                 # As tools mutaram collected_data / current_phase in-place.
                 session.save(update_fields=["collected_data", "current_phase", "updated_at"])
@@ -144,6 +150,53 @@ class RunInterviewerTurn:
         kb = self._knowledge.load_for_agent(AGENT_NAME)
         today = timezone.localdate().strftime("%d/%m/%Y")
         return template.replace(_KB_PLACEHOLDER, kb).replace(_DATE_PLACEHOLDER, today)
+
+    def _reconcile_phase(self, session: InterviewSession) -> None:
+        """Nunca deixa `current_phase` ficar atrás do que foi coletado. Aplica o
+        piso derivado dos dados, sem regredir uma fase que o LLM já avançou (ex.:
+        `review`/`done` via `mark_phase_complete`)."""
+        floor = derive_phase_floor(session.collected_data)
+        if phase_index(floor) > phase_index(session.current_phase):
+            session.current_phase = floor
+
+    def _build_state_note(self, session: InterviewSession) -> str:
+        """Bloco de estado vivo anexado ao FINAL do system (preserva o prefixo
+        cacheável template+KB). Diz ao modelo em que fase o sistema está e o que
+        já foi gravado via tools — sem isso ele voa às cegas e esquece de chamar
+        `mark_phase_complete`/`record_*`."""
+        Phase = InterviewSession.Phase
+        data = session.collected_data or {}
+        status = section_status(data)
+
+        def line(label: str, phase: str, count: int | None = None) -> str:
+            mark = "✓" if status.get(phase) else "✗"
+            suffix = f" ({count} registrado(s))" if count is not None else ""
+            return f"  [{mark}] {label}{suffix}"
+
+        current = session.current_phase
+        order = Phase.values
+        cur_idx = phase_index(current)
+        next_phase = order[cur_idx + 1] if 0 <= cur_idx < len(order) - 1 else current
+        checklist = "\n".join(
+            [
+                line("Dados pessoais", Phase.PERSONAL_INFO),
+                line("Formação", Phase.EDUCATION, len(data.get("education") or [])),
+                line("Experiência", Phase.EXPERIENCE, len(data.get("experiences") or [])),
+                line("Projetos", Phase.PROJECTS, len(data.get("projects") or [])),
+                line("Habilidades", Phase.SKILLS, len(data.get("skills") or [])),
+            ]
+        )
+        return (
+            "\n\n---\n\n## ESTADO ATUAL DA ENTREVISTA (uso interno — não repita ao candidato)\n\n"
+            f"- Fase atual no sistema: **{Phase(current).label}** (`{current}`)\n"
+            f"- Próxima fase esperada: `{next_phase}`\n"
+            "- Coleta já registrada via tools:\n"
+            f"{checklist}\n\n"
+            "Lembretes: o sistema só avança a fase quando você chama "
+            "`mark_phase_complete(next_phase)` — seu texto NÃO avança nada. E só registra "
+            "dados quando você chama as tools `record_*` — NUNCA diga que registrou algo "
+            "sem ter chamado a tool correspondente no MESMO turno."
+        )
 
     def _build_history(self, session: InterviewSession) -> list[dict]:
         return [{"role": msg.role, "content": msg.text} for msg in session.messages.all()]

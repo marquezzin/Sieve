@@ -17,7 +17,8 @@ INTERVIEWER_TOOLS = [
         "name": "record_personal_info",
         "description": (
             "Registra/atualiza os dados de contato do candidato. Chame quando "
-            "souber qualquer um destes campos. Campos omitidos não são alterados."
+            "souber qualquer um destes campos. Campos omitidos não são alterados. "
+            "Registrar = chamar esta tool, não escrever no texto."
         ),
         "input_schema": {
             "type": "object",
@@ -36,7 +37,8 @@ INTERVIEWER_TOOLS = [
         "description": (
             "Registra uma formação acadêmica do candidato. Chame UMA vez por "
             "formação (não repita a mesma). Nunca invente datas: só preencha "
-            "start/end com o que o candidato disse."
+            "start/end com o que o candidato disse. Registrar = chamar esta tool, "
+            "não escrever no texto."
         ),
         "input_schema": {
             "type": "object",
@@ -66,7 +68,8 @@ INTERVIEWER_TOOLS = [
         "name": "record_experience",
         "description": (
             "Registra uma experiência profissional, com bullets já no formato "
-            "XYZ/STAR e tecnologias usadas. Nunca invente dados não ditos."
+            "XYZ/STAR e tecnologias usadas. Nunca invente dados não ditos. "
+            "Registrar = chamar esta tool, não escrever no texto."
         ),
         "input_schema": {
             "type": "object",
@@ -90,7 +93,12 @@ INTERVIEWER_TOOLS = [
     },
     {
         "name": "record_project",
-        "description": "Registra um projeto pessoal/acadêmico do candidato.",
+        "description": (
+            "Registra um projeto pessoal/acadêmico do candidato. Chame SEMPRE que o "
+            "candidato descrever um projeto, ANTES de confirmar que anotou. Registrar "
+            "= chamar esta tool, não escrever no texto: nunca afirme que registrou um "
+            "projeto sem ter chamado esta tool no mesmo turno."
+        ),
         "input_schema": {
             "type": "object",
             "properties": {
@@ -106,7 +114,8 @@ INTERVIEWER_TOOLS = [
         "name": "record_skills",
         "description": (
             "Define a lista consolidada de habilidades técnicas, extraídas das "
-            "experiências e projetos já coletados. Substitui a lista anterior."
+            "experiências e projetos já coletados. Substitui a lista anterior. "
+            "Registrar = chamar esta tool, não escrever no texto."
         ),
         "input_schema": {
             "type": "object",
@@ -120,7 +129,9 @@ INTERVIEWER_TOOLS = [
         "name": "mark_phase_complete",
         "description": (
             "Avança a entrevista para a próxima fase quando a fase atual foi "
-            "coletada o suficiente. Use os valores válidos de fase."
+            "coletada o suficiente. O sistema NÃO avança a fase a partir do seu "
+            "texto — só esta chamada avança. Chame-a ANTES de fazer a primeira "
+            "pergunta da próxima seção. Use os valores válidos de fase."
         ),
         "input_schema": {
             "type": "object",
