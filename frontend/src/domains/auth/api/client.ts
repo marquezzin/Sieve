@@ -31,6 +31,8 @@ interface ApiEnvelope<T> {
 
 apiClient.interceptors.response.use(
   (response) => {
+    // Respostas binárias (ex.: PDF) NÃO são envelope — devolve cru.
+    if (response.config.responseType === 'blob') return response;
     const { data } = response;
     if (!data || typeof data !== 'object') return response;
     const envelope = data as ApiEnvelope<unknown>;

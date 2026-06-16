@@ -26,6 +26,11 @@ export interface Session {
   current_phase: Phase;
   collected_data: Record<string, unknown>;
   messages: Message[];
+  /**
+   * Currículo gerado pela finalização. Só presente no payload do `finalize`;
+   * sessões concluídas vindas do histórico NÃO o trazem.
+   */
+  resume_id?: string;
   created_at: string;
   updated_at: string;
 }

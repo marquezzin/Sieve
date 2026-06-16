@@ -21,4 +21,13 @@ export {
   Upload,
   Sun,
   Moon,
+  Download,
+  Refresh,
+  ChevronRight,
+  ArrowRight,
+  PenLine,
+  Stars,
+  CheckCircle,
+  Lightbulb,
+  Alert,
 } from './Icon';

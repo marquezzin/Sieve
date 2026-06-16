@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Badge,
@@ -41,10 +42,22 @@ function SessionView({
   onNewInterview,
   startingNew,
 }: SessionViewProps) {
+  const navigate = useNavigate();
   const sessionQuery = useSession(sessionId);
   const sendMutation = useSendMessage(sessionId);
   const finalizeMutation = useFinalizeSession(sessionId);
   const viewportRef = useRef<HTMLDivElement>(null);
+
+  // Pós-finalize: se o backend devolveu o currículo gerado, navega direto
+  // pra ele (estado de geração com polling). Sessões concluídas vindas do
+  // histórico NÃO têm `resume_id`, então o CompletionPanel segue intacto.
+  const handleFinalize = () => {
+    finalizeMutation.mutate(undefined, {
+      onSuccess: (session) => {
+        if (session.resume_id) navigate(`/resumes/${session.resume_id}`);
+      },
+    });
+  };
 
   const session = sessionQuery.data;
   const messages = session?.messages ?? [];
@@ -130,7 +143,7 @@ function SessionView({
           variant={finalizeEnabled ? 'filled' : 'default'}
           disabled={!finalizeEnabled}
           loading={finalizeMutation.isPending}
-          onClick={() => finalizeMutation.mutate()}
+          onClick={handleFinalize}
           title={
             finalizeEnabled
               ? undefined

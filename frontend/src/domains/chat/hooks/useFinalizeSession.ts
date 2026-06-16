@@ -15,8 +15,7 @@ export function useFinalizeSession(sessionId: string) {
       notifications.show({
         color: 'green',
         title: 'Entrevista finalizada',
-        message:
-          'Dados coletados prontos pra geração do currículo (Fase 2).',
+        message: 'Estamos gerando seu currículo — isso leva alguns segundos.',
       });
     },
     onError: () => {

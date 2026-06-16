@@ -15,6 +15,15 @@ const ChatPage = lazy(() =>
 const ProfilePage = lazy(() =>
   import('@/domains/profile').then((m) => ({ default: m.ProfilePage })),
 );
+const ResumeListPage = lazy(() =>
+  import('@/domains/resume').then((m) => ({ default: m.ResumeListPage })),
+);
+const ResumeDetailPage = lazy(() =>
+  import('@/domains/resume').then((m) => ({ default: m.ResumeDetailPage })),
+);
+const VersionDiffPage = lazy(() =>
+  import('@/domains/resume').then((m) => ({ default: m.VersionDiffPage })),
+);
 
 const withSuspense = (node: ReactNode) => (
   <Suspense fallback={<FullPageLoader />}>{node}</Suspense>
@@ -40,6 +49,18 @@ export const router = createBrowserRouter([
       {
         path: 'profile',
         element: withSuspense(<ProfilePage />),
+      },
+      {
+        path: 'resumes',
+        element: withSuspense(<ResumeListPage />),
+      },
+      {
+        path: 'resumes/:id',
+        element: withSuspense(<ResumeDetailPage />),
+      },
+      {
+        path: 'resumes/:id/diff/:from/:to',
+        element: withSuspense(<VersionDiffPage />),
       },
     ],
   },
