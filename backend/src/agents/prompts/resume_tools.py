@@ -65,7 +65,13 @@ RESUME_INPUT_SCHEMA = {
                 "github_url": _STRING,
             },
         },
-        "summary": {"type": "string", "description": "Resumo profissional, 2-4 frases."},
+        "summary": {
+            "type": "string",
+            "description": (
+                "Resumo profissional, 2-4 frases, em PRIMEIRA PESSOA do singular "
+                "('Sou...', 'Desenvolvi...') — nunca terceira pessoa."
+            ),
+        },
         "experiences": {"type": "array", "items": _EXPERIENCE_ITEM},
         "education": {"type": "array", "items": _EDUCATION_ITEM},
         "projects": {"type": "array", "items": _PROJECT_ITEM},

@@ -177,9 +177,17 @@ class RunInterviewerTurn:
         order = Phase.values
         cur_idx = phase_index(current)
         next_phase = order[cur_idx + 1] if 0 <= cur_idx < len(order) - 1 else current
+
+        # Contatos: mesmo com o mínimo ok, LinkedIn/GitHub não entram no mínimo.
+        # Sem este lembrete o modelo avança cedo demais e pula a pergunta de redes.
+        info = data.get("personal_info") or {}
+        personal_note = ""
+        if status.get(Phase.PERSONAL_INFO) and not (info.get("linkedin_url") or info.get("github_url")):
+            personal_note = " — obrigatórios ok, mas ainda sem LinkedIn/GitHub: pergunte uma vez antes de avançar"
+
         checklist = "\n".join(
             [
-                line("Dados pessoais", Phase.PERSONAL_INFO),
+                line("Dados pessoais", Phase.PERSONAL_INFO) + personal_note,
                 line("Formação", Phase.EDUCATION, len(data.get("education") or [])),
                 line("Experiência", Phase.EXPERIENCE, len(data.get("experiences") or [])),
                 line("Projetos", Phase.PROJECTS, len(data.get("projects") or [])),

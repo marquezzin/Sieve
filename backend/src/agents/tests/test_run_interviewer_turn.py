@@ -214,6 +214,39 @@ def test_state_note_injected_in_system_prompt():
 
 
 @pytest.mark.django_db
+def test_state_note_nudges_linkedin_github_when_missing():
+    # Contatos mínimos ok, mas sem LinkedIn/GitHub → a nota lembra de perguntar
+    # antes de avançar (evita o atalho que pulou a pergunta na entrevista do Homer).
+    session = InterviewSessionFactory(
+        current_phase="personal_info",
+        collected_data={"personal_info": {"name": "H", "email": "h@x.com", "phone": "1", "location": "SP"}},
+    )
+    fake = FakeLLMClient([text_response("E você tem LinkedIn ou GitHub?")])
+    RunInterviewerTurn(llm_client=fake, knowledge_loader=FakeKnowledgeLoader()).execute(
+        session=session, user_text="moro em SP"
+    )
+    assert "ainda sem LinkedIn/GitHub" in fake.last_system
+
+
+@pytest.mark.django_db
+def test_state_note_no_nudge_when_linkedin_present():
+    session = InterviewSessionFactory(
+        current_phase="personal_info",
+        collected_data={
+            "personal_info": {
+                "name": "H", "email": "h@x.com", "phone": "1", "location": "SP",
+                "linkedin_url": "linkedin.com/in/h",
+            }
+        },
+    )
+    fake = FakeLLMClient([text_response("Ótimo!")])
+    RunInterviewerTurn(llm_client=fake, knowledge_loader=FakeKnowledgeLoader()).execute(
+        session=session, user_text="esse é meu linkedin"
+    )
+    assert "ainda sem LinkedIn/GitHub" not in fake.last_system
+
+
+@pytest.mark.django_db
 def test_tool_use_loop_terminates_on_text_response():
     session = InterviewSessionFactory()
     use_case = RunInterviewerTurn(

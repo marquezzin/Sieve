@@ -17,9 +17,12 @@ Hoje é {{CURRENT_DATE}}.
 
 ## Qualidade da escrita
 
-- Cada bullet começa com **verbo de ação no passado** e descreve impacto, não tarefa.
+- **Voz: primeira pessoa do singular, sempre.** O candidato fala de si — use "Desenvolvi",
+  "Liderei", "Implementei". **Nunca** terceira pessoa ("desenvolveu", "liderou") nem o nome
+  do candidato como sujeito. Resumo e bullets seguem a MESMA voz.
+- Cada bullet começa com **verbo de ação no passado, em primeira pessoa** e descreve impacto, não tarefa.
 - Quantifique quando o dado existir (a métrica tem que ter sido informada).
-- Resumo profissional: 2–4 frases que posicionam o candidato (senioridade + foco técnico + um diferencial real).
+- Resumo profissional: 2–4 frases **em primeira pessoa** que posicionam o candidato (senioridade + foco técnico + um diferencial real).
 - `id` de cada experiência/formação/projeto: slug curto e estável (ex: `nubank-backend-pleno`) — derive de empresa+cargo / instituição+curso / nome do projeto.
 - `skills`: lista plana de tecnologias/competências reais mencionadas.
 
