@@ -39,3 +39,18 @@ def get_version(*, resume: Resume, version_number) -> ResumeVersion:
         return resume.versions.get(version_number=version_number)
     except ResumeVersion.DoesNotExist as exc:
         raise NotFoundError("Versão de currículo não encontrada.") from exc
+
+
+def get_version_for_user(*, user, version_id) -> ResumeVersion:
+    """ResumeVersion por id, garantindo que o currículo pai é do usuário.
+
+    404 se não existe; 403 se pertence a outro usuário. Usado por apps que
+    referenciam versões (ex. `matching`) sem reimplementar a checagem de dono.
+    """
+    try:
+        version = ResumeVersion.objects.select_related("resume").get(id=version_id)
+    except ResumeVersion.DoesNotExist as exc:
+        raise NotFoundError("Versão de currículo não encontrada.") from exc
+    if version.resume.user_id != user.id:
+        raise PermissionDeniedError("Versão de currículo pertence a outro usuário.")
+    return version

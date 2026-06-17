@@ -52,6 +52,7 @@ LOCAL_APPS = [
     "chat.apps.ChatConfig",
     "agents.apps.AgentsConfig",
     "resumes.apps.ResumesConfig",
+    "matching.apps.MatchingConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -140,6 +141,14 @@ KNOWLEDGE_CHUNK_OVERLAP = config("KNOWLEDGE_CHUNK_OVERLAP", default=50, cast=int
 LLM_MODEL_WRITER = config("LLM_MODEL_WRITER", default="")
 LLM_MODEL_REVIEWER = config("LLM_MODEL_REVIEWER", default="")
 LLM_MODEL_JUDGE = config("LLM_MODEL_JUDGE", default="")
+
+# ─── Matching semântico (app `matching`: vaga ↔ currículo) ───────────────────
+# Extrator de keywords da vaga é tarefa simples/barata (Haiku serve). Vazio =
+# modelo default do provider.
+LLM_MODEL_KEYWORD_EXTRACTOR = config("LLM_MODEL_KEYWORD_EXTRACTOR", default="")
+# Keyword da vaga com similaridade coseno < threshold ao conteúdo do currículo é
+# tratada como "ausente" no sinal de sanidade do ComputeMatch.
+ATS_GAP_THRESHOLD = config("ATS_GAP_THRESHOLD", default=0.5, cast=float)
 
 # ─── Celery ──────────────────────────────────────────────────────────────────
 CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://localhost:6379/1")
