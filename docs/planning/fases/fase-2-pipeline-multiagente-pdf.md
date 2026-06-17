@@ -1,7 +1,25 @@
 # Fase 2 — Pipeline multi-agente (writer/reviewer/judge) + Resume/versões + PDF
 
-**Status:** 🔲 Pendente
+**Status:** ✅ Done
+**Entregue em:** 2026-06-17
 **Pré-requisitos:** Fase 1 ✅ (precisa do `collected_data` da entrevista pra alimentar o writer)
+
+## O que ficou pronto
+
+Entregue ao longo dos commits `1570fcd` (backend Resume init), `1af676a` (pipeline writer/reviewer/judge + prompts + Celery chain + trigger `finalize` + testes), `b1cb855` (telas iniciais de currículo) e correções/polish posteriores (`7eab37c`, `4edca1d`, `bf7e5a5`, `e013cc4`). O status do doc só foi virado pra `✅ Done` em 2026-06-17 após verificação do gate.
+
+**Backend**
+- App [`resumes/`](../../../backend/src/resumes/) com `Resume`, `ResumeVersion`, `ResumeScore`, selectors, API REST, templates HTML e `CLAUDE.md` documentando o schema de `structured_data`.
+- App `agents/` estendido com [`run_writer.py`](../../../backend/src/agents/use_cases/run_writer.py), [`run_reviewer.py`](../../../backend/src/agents/use_cases/run_reviewer.py), [`run_judge.py`](../../../backend/src/agents/use_cases/run_judge.py) + prompts e `tasks.py` com a chain `generate_resume_pipeline`.
+- Trigger no `chat/api/views.py:finalize` dispara o pipeline.
+- Integration [`integrations/pdf/`](../../../backend/src/integrations/pdf/) com WeasyPrint wrapper.
+- Knowledge base real em `knowledge_base/writing/`, `knowledge_base/rubric/`, `knowledge_base/templates/`.
+
+**Frontend**
+- Domain [`resume/`](../../../frontend/src/domains/resume/) com API client, hooks (polling), componentes e páginas de lista/detalhe/diff.
+
+**Verificação realizada**
+- `make test-fast` → **210 passed, 1 skipped** (meta do spec era ≥170).
 
 ## Contexto
 
