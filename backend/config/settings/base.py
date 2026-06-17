@@ -53,6 +53,7 @@ LOCAL_APPS = [
     "agents.apps.AgentsConfig",
     "resumes.apps.ResumesConfig",
     "matching.apps.MatchingConfig",
+    "applications.apps.ApplicationsConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

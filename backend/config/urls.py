@@ -69,6 +69,10 @@ with contextlib.suppress(ImportError):
 with contextlib.suppress(ImportError):
     urlpatterns.append(path("api/v1/matching/", include("matching.api.urls")))
 
+# `applications` app — Kanban de candidaturas em /api/v1/applications/.
+with contextlib.suppress(ImportError):
+    urlpatterns.append(path("api/v1/applications/", include("applications.api.urls")))
+
 # django-debug-toolbar — só em DEBUG. As URLs `__debug__/` precisam estar
 # registradas, senão o toolbar quebra com NoReverseMatch ('djdt') ao tentar
 # se injetar em qualquer resposta vinda de INTERNAL_IPS.
