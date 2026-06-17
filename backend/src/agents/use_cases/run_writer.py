@@ -95,10 +95,13 @@ class RunWriter:
         return template.replace(_KB_PLACEHOLDER, kb).replace(_DATE_PLACEHOLDER, today)
 
     def _build_user_content(self, resume: Resume, collected_data: dict) -> str:
+        # Remove metadados internos (chaves `_*`, ex.: `_skipped` de seções vazias)
+        # — são controle de fase, não dado de currículo, e só confundiriam o writer.
+        cv_data = {k: v for k, v in (collected_data or {}).items() if not k.startswith("_")}
         parts = [
             "Dados coletados na entrevista (JSON):",
             "```json",
-            json.dumps(collected_data, ensure_ascii=False, indent=2),
+            json.dumps(cv_data, ensure_ascii=False, indent=2),
             "```",
             "",
             "Produza o currículo estruturado chamando a tool `submit_resume`. "

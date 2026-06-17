@@ -43,10 +43,16 @@ def test_apply_is_idempotent():
 
 @pytest.mark.django_db
 def test_recompute_phase_bumps_floor():
-    # collected_data já com skills → piso = skills; --recompute-phase destrava.
+    # Demais seções já resolvidas; ao inserir o projeto que faltava, a cadeia fica
+    # contígua e --recompute-phase sobe o piso até skills, destravando o Finalizar.
     session = InterviewSessionFactory(
         current_phase="education",
-        collected_data={"skills": ["Python"]},
+        collected_data={
+            "personal_info": {"name": "G", "email": "g@x.com", "phone": "1", "location": "DF"},
+            "education": [{"institution": "UniCeub", "course": "CC"}],
+            "experiences": [{"company": "Trídia", "role": "Dev", "bullets": ["fiz X"]}],
+            "skills": ["Python"],
+        },
     )
     call_command(
         "backfill_ingenia_project",

@@ -126,12 +126,39 @@ INTERVIEWER_TOOLS = [
         },
     },
     {
+        "name": "mark_section_empty",
+        "description": (
+            "Marque uma seção como genuinamente VAZIA quando o candidato declarar "
+            "que não tem aquilo (ex.: primeiro emprego, sem experiência; nenhum "
+            "projeto; sem formação acadêmica formal). Só chame DEPOIS de confirmar "
+            "com o candidato. NÃO use para pular uma seção que você ainda não "
+            "coletou ou que esqueceu de registrar — só quando o candidato REALMENTE "
+            "não tem. Isso libera o avanço de fase sem inventar dados. Seções "
+            "puláveis: 'education', 'experience', 'projects'."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "section": {
+                    "type": "string",
+                    "enum": ["education", "experience", "projects"],
+                    "description": "A seção que o candidato declarou não ter.",
+                },
+            },
+            "required": ["section"],
+        },
+    },
+    {
         "name": "mark_phase_complete",
         "description": (
             "Avança a entrevista para a próxima fase quando a fase atual foi "
             "coletada o suficiente. O sistema NÃO avança a fase a partir do seu "
             "texto — só esta chamada avança. Chame-a ANTES de fazer a primeira "
-            "pergunta da próxima seção. Use os valores válidos de fase."
+            "pergunta da próxima seção. Use os valores válidos de fase. "
+            "IMPORTANTE: esta chamada é REJEITADA se alguma seção anterior ainda "
+            "tiver dado pendente — ou seja, o candidato te contou algo mas você não "
+            "chamou a `record_*` correspondente. Nesse caso registre via `record_*` "
+            "(ou `mark_section_empty` se ele genuinamente não tem) e tente de novo."
         ),
         "input_schema": {
             "type": "object",

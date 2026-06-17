@@ -145,7 +145,14 @@ def test_record_personal_info_syncs_candidate_profile():
 
 @pytest.mark.django_db
 def test_mark_phase_complete_advances_phase():
-    session = InterviewSessionFactory(current_phase="personal_info")
+    # Avança quando as seções anteriores já estão resolvidas (gate liberado).
+    session = InterviewSessionFactory(
+        current_phase="education",
+        collected_data={
+            "personal_info": {"name": "Ana", "email": "a@x.com", "phone": "1", "location": "SP"},
+            "education": [{"institution": "X", "course": "CC"}],
+        },
+    )
     use_case = _make_use_case(
         [
             tool_use_response("mark_phase_complete", {"next_phase": "experience"}),
@@ -160,10 +167,72 @@ def test_mark_phase_complete_advances_phase():
 
 
 @pytest.mark.django_db
+def test_mark_phase_complete_rejected_when_section_pending():
+    # Caso Gabriel: a IA tenta avançar para `projects` sem ter gravado a
+    # experiência (alucinou "registrei" no texto). O gate REJEITA e a fase não
+    # avança — o piso fica em `education`, honesto.
+    session = InterviewSessionFactory(
+        current_phase="experience",
+        collected_data={
+            "personal_info": {"name": "Ana", "email": "a@x.com", "phone": "1", "location": "SP"},
+            "education": [{"institution": "X", "course": "CC"}],
+        },
+    )
+    use_case = _make_use_case(
+        [
+            tool_use_response("mark_phase_complete", {"next_phase": "projects"}),
+            text_response("Anotei sua experiência!"),  # texto mente; nenhuma record_experience
+        ]
+    )
+
+    use_case.execute(session=session, user_text="trabalhei na Trídia")
+
+    session.refresh_from_db()
+    # Gate barrou o avanço: a fase fica presa em `experience` (não pula pra
+    # `projects`) e a experiência segue não-registrada — em vez de a fase mentir.
+    assert session.current_phase == "experience"
+    assert "experiences" not in session.collected_data
+
+
+@pytest.mark.django_db
+def test_mark_section_empty_unblocks_advance():
+    # Candidato sem experiência declara isso: mark_section_empty libera o gate.
+    session = InterviewSessionFactory(
+        current_phase="experience",
+        collected_data={
+            "personal_info": {"name": "Ana", "email": "a@x.com", "phone": "1", "location": "SP"},
+            "education": [{"institution": "X", "course": "CC"}],
+        },
+    )
+    use_case = _make_use_case(
+        [
+            tool_use_response("mark_section_empty", {"section": "experience"}),
+            tool_use_response("mark_phase_complete", {"next_phase": "projects"}),
+            text_response("Sem problemas, vamos aos projetos."),
+        ]
+    )
+
+    use_case.execute(session=session, user_text="nunca trabalhei formalmente")
+
+    session.refresh_from_db()
+    assert "experience" in session.collected_data["_skipped"]
+    assert session.current_phase == "projects"
+
+
+@pytest.mark.django_db
 def test_phase_reconciled_from_data_when_mark_phase_skipped():
-    # O LLM grava skills mas ESQUECE de chamar mark_phase_complete (o bug do Thales).
-    # A reconciliação pelo dado avança a fase mesmo assim — destrava o botão Finalizar.
-    session = InterviewSessionFactory(current_phase="education")
+    # O LLM grava skills mas ESQUECE de chamar mark_phase_complete. Com as seções
+    # anteriores já resolvidas (experiência coletada, projetos marcados vazios), a
+    # reconciliação pelo dado avança a fase mesmo assim — destrava o Finalizar.
+    session = InterviewSessionFactory(
+        current_phase="education",
+        collected_data={
+            "personal_info": {"name": "Ana", "email": "a@x.com", "phone": "1", "location": "SP"},
+            "education": [{"institution": "X", "course": "CC"}],
+            "experiences": [{"company": "Acme", "role": "Dev", "bullets": ["fiz X"]}],
+            "_skipped": ["projects"],
+        },
+    )
     use_case = _make_use_case(
         [
             tool_use_response("record_skills", {"skills": ["Python", "SQL"]}),
@@ -291,6 +360,27 @@ def test_persists_agent_run():
     assert run.agent_name == "interviewer"
     assert run.status == AgentRun.Status.SUCCESS
     assert run.usage.get("input_tokens", 0) > 0
+    # Turno sem tools → lista de tool_calls vazia (auditoria).
+    assert run.output["tool_calls"] == []
+
+
+@pytest.mark.django_db
+def test_agent_run_audits_tool_calls():
+    # A auditoria registra QUAIS tools foram chamadas — pra detectar na hora o
+    # sintoma "a IA disse que registrou mas não chamou a tool".
+    session = InterviewSessionFactory()
+    use_case = _make_use_case(
+        [
+            tool_use_response("record_experience", {"company": "Acme", "role": "Dev"}),
+            text_response("Anotado!"),
+        ]
+    )
+
+    use_case.execute(session=session, user_text="trabalhei na Acme")
+
+    run = AgentRun.objects.get(session=session)
+    assert run.output["tool_calls"] == ["record_experience"]
+    assert run.output["phase_after"] == session.current_phase
 
 
 @pytest.mark.django_db

@@ -20,7 +20,15 @@ from accounts.services import sync_profile_from_personal_info
 from agents.models import AgentRun
 from chat.models import ChatMessage, InterviewSession
 from chat.prompts.tools import INTERVIEWER_TOOLS
-from chat.services import derive_phase_floor, phase_index, section_status
+from chat.services import (
+    SKIPPABLE_PHASES,
+    SKIPPED_KEY,
+    derive_phase_floor,
+    missing_sections_before,
+    phase_index,
+    section_status,
+    skipped_sections,
+)
 from core.errors import ApplicationError
 from integrations.llm.base import LLMError
 from integrations.llm.factory import get_llm_client
@@ -34,6 +42,27 @@ _DATE_PLACEHOLDER = "{{CURRENT_DATE}}"
 _KICKOFF = "[A entrevista está começando. Apresente-se brevemente e comece a coleta de dados pessoais.]"
 _EMPTY_FALLBACK = "Pode me contar um pouco mais?"
 _MAX_ROUNDS = 10
+
+
+def _tool_calls_from_result(result: Any) -> list[str]:
+    """Nomes das tools que o modelo chamou no turn, na ordem, extraídos do rastro
+    de mensagens do loop. Gravado no `AgentRun` pra auditoria: dá pra ver na hora
+    se `record_experience`/`record_project` foram (ou não) chamados — sem isso, o
+    sintoma 'a IA disse que registrou mas não registrou' só era detectável
+    cruzando o texto com o `collected_data`."""
+    calls: list[str] = []
+    for msg in getattr(result, "messages", []) or []:
+        if msg.get("role") != "assistant":
+            continue
+        content = msg.get("content")
+        if not isinstance(content, list):
+            continue
+        calls.extend(
+            block["name"]
+            for block in content
+            if isinstance(block, dict) and block.get("type") == "tool_use" and block.get("name")
+        )
+    return calls
 
 
 def _entry_key(entry: dict, fields: tuple[str, ...]) -> tuple[str, ...]:
@@ -104,7 +133,12 @@ class RunInterviewerTurn:
                     agent_name=AGENT_NAME,
                     session=session,
                     input={"phase": starting_phase, "history_len": len(history)},
-                    output={"final_text": result.final_text, "rounds": result.rounds},
+                    output={
+                        "final_text": result.final_text,
+                        "rounds": result.rounds,
+                        "tool_calls": _tool_calls_from_result(result),
+                        "phase_after": session.current_phase,
+                    },
                     usage=result.usage,
                     status=AgentRun.Status.SUCCESS,
                 )
@@ -167,8 +201,11 @@ class RunInterviewerTurn:
         Phase = InterviewSession.Phase
         data = session.collected_data or {}
         status = section_status(data)
+        skipped = skipped_sections(data)
 
         def line(label: str, phase: str, count: int | None = None) -> str:
+            if phase in skipped:
+                return f"  [∅] {label} (candidato declarou não ter — marcada vazia)"
             mark = "✓" if status.get(phase) else "✗"
             suffix = f" ({count} registrado(s))" if count is not None else ""
             return f"  [{mark}] {label}{suffix}"
@@ -203,7 +240,10 @@ class RunInterviewerTurn:
             "Lembretes: o sistema só avança a fase quando você chama "
             "`mark_phase_complete(next_phase)` — seu texto NÃO avança nada. E só registra "
             "dados quando você chama as tools `record_*` — NUNCA diga que registrou algo "
-            "sem ter chamado a tool correspondente no MESMO turno."
+            "sem ter chamado a tool correspondente no MESMO turno. As seções marcadas com "
+            "[✗] acima têm dado PENDENTE: `mark_phase_complete` será REJEITADA enquanto "
+            "elas não forem resolvidas — registre via `record_*` (se o candidato contou) "
+            "ou `mark_section_empty` (se ele genuinamente não tem)."
         )
 
     def _build_history(self, session: InterviewSession) -> list[dict]:
@@ -231,10 +271,40 @@ class RunInterviewerTurn:
         if name == "record_skills":
             data["skills"] = tool_input.get("skills", [])
             return {"ok": True}
+        if name == "mark_section_empty":
+            section = tool_input.get("section")
+            if section not in SKIPPABLE_PHASES:
+                return {
+                    "ok": False,
+                    "error": f"seção não pulável: {section} (puláveis: "
+                    f"{', '.join(sorted(SKIPPABLE_PHASES))})",
+                }
+            skipped = data.setdefault(SKIPPED_KEY, [])
+            if section not in skipped:
+                skipped.append(section)
+            return {"ok": True, "skipped": section}
         if name == "mark_phase_complete":
             nxt = tool_input.get("next_phase")
             if nxt not in InterviewSession.Phase.values:
                 return {"ok": False, "error": f"fase inválida: {nxt}"}
+            # Gate: não avança por cima de seção com dado pendente (não gravado e
+            # não marcado vazio). Pega o modelo que alucina "registrei X" no texto
+            # sem ter chamado a `record_*`. Devolve erro acionável e o loop segue —
+            # o modelo registra o que falta e tenta de novo no mesmo turn.
+            missing = missing_sections_before(data, nxt)
+            if missing:
+                Phase = InterviewSession.Phase
+                labels = ", ".join(Phase(m).label for m in missing)
+                return {
+                    "ok": False,
+                    "error": (
+                        f"Não pode avançar para '{nxt}': as seções [{labels}] ainda "
+                        "têm dado pendente. Para cada uma, chame a `record_*` "
+                        "correspondente (se o candidato te contou) OU "
+                        "`mark_section_empty` (se ele genuinamente não tem) ANTES de "
+                        "chamar `mark_phase_complete` de novo."
+                    ),
+                }
             session.current_phase = nxt
             return {"ok": True, "current_phase": nxt}
         if name == "request_clarification":
