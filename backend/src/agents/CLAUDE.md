@@ -86,25 +86,6 @@ estruturada e persiste no app `resumes`.
   por `chat/api/views.py:finalize` via `.delay()` (que cria o `Resume` placeholder
   antes). Tasks THIN: buscam objeto, chamam 1 use case, retornam o id (str).
 
-## Fase 3 — otimizador ATS (reescrita pra vaga)
-
-- **`use_cases/run_ats_optimizer.py`** — `RunAtsOptimizer().execute(version=..., job_posting=...)`:
-  reescreve uma `ResumeVersion` enfatizando as keywords da vaga e devolve uma
-  **nova versão** (`generated_by_agent="ats_optimizer"`, `version_number` = máx+1).
-  Mesma tool `submit_resume` do writer/reviewer. Marca `resume.status=generating`
-  no início (o juiz volta pra `ready` ao fim do chain).
-- **Guardrail anti-fabricação em DOIS níveis** (núcleo defensável do produto):
-  1. **Prompt** (`prompts/ats_optimizer_system.md` + KB `ats/do_not_fabricate`) —
-     instrui a nunca inventar empregador/cargo/período/instituição/tecnologia.
-  2. **Validação post-hoc** (`_assert_no_fabrication`) — compara os conjuntos de
-     identidade (empresas, cargos, instituições) e as contagens de experiências/
-     formações entre entrada e saída. Fabricou? `ApplicationError` + `status=failed`,
-     **sem persistir** (fail-closed). Bullets/`tech_stack` NÃO entram no guardrail
-     (injetar o vocabulário da vaga onde é verdade é o objetivo).
-- **`tasks.py`** — `run_ats_optimizer_pipeline(resume_version_id, job_posting_id)`
-  encadeia `run_ats_optimizer_task.s | run_judge_task.s`. Disparado por
-  `matching/api/views.py:OptimizeView` via `.delay()`. Modelo: `settings.LLM_MODEL_ATS_OPTIMIZER`.
-
 ## Patterns / Stop list
 
 - LLM **sempre** via `integrations.llm` (factory/loop) — nunca SDK cru no use case.

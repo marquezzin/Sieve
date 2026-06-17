@@ -13,11 +13,9 @@ comportamento desejado.
 
 from celery import chain, shared_task
 
-from agents.use_cases.run_ats_optimizer import RunAtsOptimizer
 from agents.use_cases.run_judge import RunJudge
 from agents.use_cases.run_reviewer import RunReviewer
 from agents.use_cases.run_writer import RunWriter
-from matching.models import JobPosting
 from resumes.models import Resume, ResumeVersion
 
 
@@ -54,27 +52,5 @@ def generate_resume_pipeline(resume_id: str) -> None:
     chain(
         run_writer_task.s(resume_id),
         run_reviewer_task.s(),
-        run_judge_task.s(),
-    ).apply_async()
-
-
-@shared_task
-def run_ats_optimizer_task(resume_version_id: str, job_posting_id: str) -> str:
-    version = ResumeVersion.objects.get(id=resume_version_id)
-    job = JobPosting.objects.get(id=job_posting_id)
-    new_version = RunAtsOptimizer().execute(version=version, job_posting=job)
-    return str(new_version.id)
-
-
-@shared_task
-def run_ats_optimizer_pipeline(resume_version_id: str, job_posting_id: str) -> None:
-    """Encadeia ATS optimizer → judge.
-
-    O otimizador cria a versão reescrita pra vaga; o juiz volta a pontuá-la (e
-    marca `Resume.status=ready`). Mesmo padrão do `generate_resume_pipeline`:
-    `run_judge_task.s()` recebe o `version_id` retornado pelo otimizador.
-    """
-    chain(
-        run_ats_optimizer_task.s(resume_version_id, job_posting_id),
         run_judge_task.s(),
     ).apply_async()

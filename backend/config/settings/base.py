@@ -147,9 +147,6 @@ LLM_MODEL_JUDGE = config("LLM_MODEL_JUDGE", default="")
 # Extrator de keywords da vaga é tarefa simples/barata (Haiku serve). Vazio =
 # modelo default do provider.
 LLM_MODEL_KEYWORD_EXTRACTOR = config("LLM_MODEL_KEYWORD_EXTRACTOR", default="")
-# Otimizador ATS reescreve o currículo pra vaga — precisão importa (guardrail
-# anti-fabricação). Vazio = modelo default do provider.
-LLM_MODEL_ATS_OPTIMIZER = config("LLM_MODEL_ATS_OPTIMIZER", default="")
 # Keyword da vaga com similaridade coseno < threshold ao conteúdo do currículo é
 # tratada como "ausente" no sinal de sanidade do ComputeMatch.
 ATS_GAP_THRESHOLD = config("ATS_GAP_THRESHOLD", default=0.5, cast=float)
