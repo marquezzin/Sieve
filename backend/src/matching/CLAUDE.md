@@ -5,8 +5,8 @@ uma descrição de vaga, o sistema extrai keywords (LLM), gera embedding (pgvect
 e calcula a aderência de uma versão do currículo à vaga.
 
 > **Em conflito com `backend/CLAUDE.md`, esse arquivo perde.**
-> A reescrita ATS-aware do currículo (`RunAtsOptimizer`) **não** mora aqui — é do
-> app de agentes. Este app ingere vaga, calcula match e dispara o optimizer.
+> Este app ingere a vaga e calcula a aderência (score + skills + recomendações
+> honestas). Não reescreve currículo.
 
 ## Models
 
@@ -19,7 +19,10 @@ e calcula a aderência de uma versão do currículo à vaga.
     expõe como **float 0.0–1.0**; o frontend multiplica por 100 pra exibir %.
   - `matched_skills` — `list[str]`.
   - `missing_skills` — `list[{"skill": str, "critical": bool}]`.
-  - `recommendations` — `list[str]` curtas e acionáveis.
+  - `recommendations` — `list[{"title": str, "detail": str, "category": str}]`,
+    detalhadas e honestas. `category` ∈ `realce` (explicitar experiência real com
+    o termo da vaga) / `enfase` (priorizar o que já existe) / `gap` (lacuna real a
+    desenvolver — nunca a fabricar). É o entregável principal do produto.
 
 ## API (`/api/v1/matching/`)
 
@@ -31,7 +34,6 @@ Tudo escopado ao `request.user` (selectors com 404/403). `IsAuthenticated` defau
 | POST | `/jobs/` | ingere vaga (`title`, `company`, `description`) → `JobPosting` |
 | GET | `/jobs/{id}/` | detalhe da vaga |
 | POST | `/analyze/` | body `{resume_version_id, job_posting_id}`, `?refresh=true` força recálculo → `MatchAnalysis` |
-| POST | `/optimize/` | body `{resume_version_id, job_posting_id}` → dispara `agents.tasks.run_ats_optimizer_pipeline` (Celery), retorna `{task_id}` (202) |
 
 ## Use cases
 
@@ -53,12 +55,14 @@ Tudo escopado ao `request.user` (selectors com 404/403). `IsAuthenticated` defau
 - **Keyword "ausente"** = similaridade coseno keyword↔currículo `< ATS_GAP_THRESHOLD`
   (default `0.5`, via settings). É só sinal de sanidade — a verdade final é do LLM,
   que olha o conteúdo real do currículo.
-- **`optimize` referencia a task por nome** (import lazy dentro da view) pra não
-  acoplar `matching` ao app de agentes em tempo de carga.
+- **Recomendações honestas** — o prompt do `matcher` proíbe sugerir adicionar/
+  adquirir skill que o candidato não tem; no máximo aponta o gap real.
 
 ## NÃO faz
 
-- Não reescreve currículo (isso é `agents.RunAtsOptimizer`) — só dispara.
+- Não reescreve nem "otimiza" currículo — o produto só mostra a análise honesta
+  (score + skills + recomendações). Reescrita automática foi descartada por risco
+  de fabricação.
 - Não cria/lista vagas de terceiros — só do usuário autenticado.
 - Não faz crawling de vaga — o usuário cola o texto.
 

@@ -34,7 +34,20 @@ AGENT_NAME = "matcher"
 _SYSTEM_INTRO = (
     "Você é um analista de aderência de currículos a vagas (ATS-aware). Compare as "
     "keywords da vaga com o conteúdo real do currículo e submeta a análise via a "
-    "tool `submit_match`. Nunca invente experiência que o candidato não tem."
+    "tool `submit_match`. Nunca invente experiência que o candidato não tem.\n\n"
+    "As RECOMENDAÇÕES são o ENTREGÁVEL PRINCIPAL do produto — capriche. Gere de 3 a "
+    "5, cada uma DETALHADA, ESPECÍFICA e personalizada: cite a experiência, projeto "
+    "ou tecnologia REAL do candidato pelo nome (ex.: 'na sua experiência no Nubank…') "
+    "e diga exatamente o que fazer, onde no currículo e por que importa PARA ESTA "
+    "VAGA. Nada de conselho genérico do tipo 'melhore seu currículo'.\n"
+    "Cada recomendação tem `title` (ação em uma frase), `detail` (2-4 frases com o "
+    "porquê e o como, ancorado no conteúdo real) e `category`:\n"
+    "- `realce`: explicitar/renomear experiência REAL com o termo exato da vaga "
+    "(ex.: usou Kafka mas escreveu 'mensageria' → recomende nomear 'Kafka').\n"
+    "- `enfase`: priorizar/destacar no topo o que já existe e a vaga valoriza.\n"
+    "- `gap`: lacuna GENUÍNA — aponte como algo a desenvolver no futuro, com franqueza. "
+    "NUNCA mande adicionar, adquirir ou inventar no currículo uma skill que o "
+    "candidato não tem. Honestidade acima de aderência."
 )
 
 
@@ -121,9 +134,14 @@ class ComputeMatch:
             return result
 
         try:
+            # 2 chamadas no total (currículo + 1 batch de keywords), não N+1 —
+            # crítico no free tier do Voyage (3 RPM): uma keyword por chamada
+            # estourava o rate limit em qualquer vaga com várias skills.
             resume_vec = self._embeddings.embed(resume_text, input_type="document")
-            for kw in keywords:
-                kw_vec = self._embeddings.embed(f"skill: {kw}", input_type="query")
+            kw_vecs = self._embeddings.embed_batch(
+                [f"skill: {kw}" for kw in keywords], input_type="query"
+            )
+            for kw, kw_vec in zip(keywords, kw_vecs, strict=True):
                 sim = _cosine_similarity(kw_vec, resume_vec)
                 if sim < settings.ATS_GAP_THRESHOLD:
                     result["likely_missing"].append(kw)
@@ -208,10 +226,29 @@ class ComputeMatch:
                 "score": Decimal(str(round(score, 3))),
                 "matched_skills": [str(s) for s in matched],
                 "missing_skills": self._normalize_missing(missing),
-                "recommendations": [str(r) for r in recommendations],
+                "recommendations": self._normalize_recommendations(recommendations),
             },
         )
         return analysis
+
+    @staticmethod
+    def _normalize_recommendations(recs: list) -> list[dict]:
+        """Recomendação detalhada: `{title, detail, category}`. Tolera string crua
+        (modelo antigo) promovendo-a a `detail`."""
+        valid_cats = {"realce", "enfase", "gap"}
+        normalized: list[dict] = []
+        for item in recs:
+            if isinstance(item, dict):
+                title = str(item.get("title", "")).strip()
+                detail = str(item.get("detail", "")).strip()
+                category = str(item.get("category", "")).strip().lower()
+                if category not in valid_cats:
+                    category = ""
+                if title or detail:
+                    normalized.append({"title": title, "detail": detail, "category": category})
+            elif isinstance(item, str) and item.strip():
+                normalized.append({"title": "", "detail": item.strip(), "category": ""})
+        return normalized
 
     @staticmethod
     def _normalize_missing(missing: list) -> list[dict]:

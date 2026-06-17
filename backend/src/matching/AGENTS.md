@@ -2,8 +2,7 @@
 
 App de aderência semântica currículo ↔ vaga: `JobPosting` (vaga + keywords +
 embedding) e `MatchAnalysis` (score 0–1 + skills batidas/ausentes + recs,
-cacheado por par). Ingere vaga, calcula match e **dispara** o ATS optimizer;
-**não** reescreve currículo.
+cacheado por par). Ingere vaga e calcula match; **não** reescreve currículo.
 
 ## Layout
 
@@ -19,7 +18,7 @@ cacheado por par). Ingere vaga, calcula match e **dispara** o ATS optimizer;
 - Lógica em `use_cases/`, queries em `selectors.py`. Views só orquestram.
 - **Nunca** `from rest_framework` em `use_cases/selectors`.
 - `score` é 0–1 no backend (% é no frontend). `missing_skills` = `[{skill, critical}]`.
-- ATS optimizer é do app de agentes — aqui só dispara via task (import lazy).
+- Recomendações honestas: o prompt do `matcher` não sugere fabricar/adquirir skill ausente.
 - Schema, endpoints e decisões: ver `CLAUDE.md`.
 
 ## Validar

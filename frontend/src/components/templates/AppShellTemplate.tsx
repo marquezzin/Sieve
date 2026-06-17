@@ -53,7 +53,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Início', icon: Home, to: '/', end: true },
   { label: 'Chat', icon: Chat, to: '/chat', tag: 'IA' },
   { label: 'Currículos', icon: File, to: '/resumes' },
-  { label: 'Vagas', icon: Briefcase, soon: true },
+  { label: 'Vagas', icon: Briefcase, to: '/matching' },
   { label: 'Candidaturas', icon: Kanban, count: 5, soon: true },
   { label: 'Perfil', icon: User, to: '/profile' },
 ];

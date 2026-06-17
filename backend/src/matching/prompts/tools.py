@@ -65,8 +65,43 @@ MATCH_TOOL = {
                 "description": "Skills da vaga ausentes no currículo, com flag de criticidade.",
             },
             "recommendations": {
-                **_STRING_LIST,
-                "description": "Recomendações curtas e acionáveis pra melhorar a aderência.",
+                "type": "array",
+                "description": (
+                    "3 a 5 recomendações DETALHADAS, ESPECÍFICAS e HONESTAS — o produto "
+                    "vive disto, então não seja genérico. Cada uma cita a experiência/"
+                    "projeto REAL do candidato (por nome) e diz exatamente o que fazer e "
+                    "por que importa PARA ESTA VAGA. NUNCA recomende adicionar/adquirir/"
+                    "inventar uma skill que o candidato não tem."
+                ),
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "title": {
+                            "type": "string",
+                            "description": "Ação concreta em uma frase (headline acionável).",
+                        },
+                        "detail": {
+                            "type": "string",
+                            "description": (
+                                "2 a 4 frases. Explique POR QUE importa pra esta vaga e "
+                                "COMO/ONDE aplicar no currículo, citando a experiência, "
+                                "projeto ou tecnologia REAL do candidato. Concreto e "
+                                "personalizado — nunca genérico, nunca fabricado."
+                            ),
+                        },
+                        "category": {
+                            "type": "string",
+                            "enum": ["realce", "enfase", "gap"],
+                            "description": (
+                                "'realce' = explicitar/renomear experiência real com o "
+                                "vocabulário da vaga; 'enfase' = priorizar/destacar o que "
+                                "já existe; 'gap' = lacuna REAL a desenvolver no futuro "
+                                "(jamais a inventar no currículo agora)."
+                            ),
+                        },
+                    },
+                    "required": ["title", "detail", "category"],
+                },
             },
         },
         "required": ["matched_skills", "missing_skills", "recommendations"],

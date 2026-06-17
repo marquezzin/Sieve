@@ -34,6 +34,7 @@ class MatchAnalysisSerializer(serializers.ModelSerializer):
     """Veredito de aderência. `score` é exposto como float 0.0–1.0."""
 
     resume_version = serializers.UUIDField(source="resume_version_id", read_only=True)
+    resume = serializers.UUIDField(source="resume_version.resume_id", read_only=True)
     job_posting = serializers.UUIDField(source="job_posting_id", read_only=True)
     score = serializers.SerializerMethodField()
 
@@ -42,6 +43,7 @@ class MatchAnalysisSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "resume_version",
+            "resume",
             "job_posting",
             "score",
             "matched_skills",
@@ -53,3 +55,21 @@ class MatchAnalysisSerializer(serializers.ModelSerializer):
 
     def get_score(self, obj: MatchAnalysis) -> float:
         return float(obj.score)
+
+
+class JobPostingDetailSerializer(JobPostingSerializer):
+    """Detalhe da vaga + as análises já feitas contra ela (mais recente primeiro).
+
+    Alimenta a página de detalhe da análise no frontend — a lista de vagas é
+    enxuta; o detalhe traz o veredito completo.
+    """
+
+    analyses = serializers.SerializerMethodField()
+
+    class Meta(JobPostingSerializer.Meta):
+        fields = (*JobPostingSerializer.Meta.fields, "analyses")
+        read_only_fields = fields
+
+    def get_analyses(self, obj: JobPosting) -> list[dict]:
+        analyses = obj.match_analyses.select_related("resume_version").order_by("-id")
+        return MatchAnalysisSerializer(analyses, many=True).data

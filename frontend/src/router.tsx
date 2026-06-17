@@ -24,6 +24,12 @@ const ResumeDetailPage = lazy(() =>
 const VersionDiffPage = lazy(() =>
   import('@/domains/resume').then((m) => ({ default: m.VersionDiffPage })),
 );
+const JobAnalysisPage = lazy(() =>
+  import('@/domains/matching').then((m) => ({ default: m.JobAnalysisPage })),
+);
+const JobDetailPage = lazy(() =>
+  import('@/domains/matching').then((m) => ({ default: m.JobDetailPage })),
+);
 
 const withSuspense = (node: ReactNode) => (
   <Suspense fallback={<FullPageLoader />}>{node}</Suspense>
@@ -61,6 +67,14 @@ export const router = createBrowserRouter([
       {
         path: 'resumes/:id/diff/:from/:to',
         element: withSuspense(<VersionDiffPage />),
+      },
+      {
+        path: 'matching',
+        element: withSuspense(<JobAnalysisPage />),
+      },
+      {
+        path: 'matching/jobs/:id',
+        element: withSuspense(<JobDetailPage />),
       },
     ],
   },
