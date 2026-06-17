@@ -7,7 +7,10 @@ from matching.models import JobPosting, MatchAnalysis
 class JobPostingAdmin(admin.ModelAdmin):
     list_display = ("id", "title", "company", "user", "created_at")
     search_fields = ("title", "company", "user__username", "user__email")
-    readonly_fields = ("id", "user", "embedding", "extracted_keywords", "created_at", "updated_at")
+    # `embedding` (VectorField) fica fora do form: o admin quebra ao avaliar a
+    # "verdade" de um vetor numpy (ValueError "ambiguous"). É índice interno.
+    exclude = ("embedding",)
+    readonly_fields = ("id", "user", "extracted_keywords", "created_at", "updated_at")
 
 
 @admin.register(MatchAnalysis)

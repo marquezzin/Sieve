@@ -36,13 +36,28 @@ class Command(BaseCommand):
             return
 
         logger.info(f"Backfill de embedding: {total} versões a processar.")
-        done = 0
+        ok = 0
+        failed: list[str] = []
         for version in qs.iterator():
             # Zera o hash pra forçar o recálculo no pre_save mesmo com --force.
             version.structured_data_hash = ""
             version.save(update_fields=["embedding", "structured_data_hash", "updated_at"])
-            done += 1
-            if done % 20 == 0:
-                logger.info(f"  {done}/{total}…")
+            # O signal é best-effort (engole EmbeddingsError, ex. 429 do Voyage):
+            # confere se o vetor foi de fato gravado em vez de presumir sucesso.
+            version.refresh_from_db(fields=["embedding"])
+            if version.embedding is not None:
+                ok += 1
+            else:
+                failed.append(f"{version.resume_id} v{version.version_number}")
+            if (ok + len(failed)) % 20 == 0:
+                logger.info(f"  {ok + len(failed)}/{total}…")
 
-        self.stdout.write(self.style.SUCCESS(f"Backfill concluído: {done}/{total} versões."))
+        if failed:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Backfill: {ok}/{total} ok, {len(failed)} falharam (provável rate limit "
+                    f"do provider de embeddings). Rode de novo pra retomar: {failed[:10]}"
+                )
+            )
+        else:
+            self.stdout.write(self.style.SUCCESS(f"Backfill concluído: {ok}/{total} versões."))

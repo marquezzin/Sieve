@@ -41,6 +41,9 @@ class ResumeVersionAdmin(admin.ModelAdmin):
     list_display = ("id", "resume", "version_number", "generated_by_agent", "created_at")
     list_filter = ("generated_by_agent",)
     search_fields = ("resume__id", "resume__title")
+    # `embedding` (VectorField) fora do form — admin quebra ao avaliar a verdade
+    # de um vetor numpy. `structured_data_hash` é detalhe interno do signal.
+    exclude = ("embedding", "structured_data_hash")
     readonly_fields = (
         "id",
         "resume",
