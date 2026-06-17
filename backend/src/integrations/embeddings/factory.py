@@ -7,7 +7,9 @@ Lê config via `decouple.config`:
 - `EMBEDDINGS_TIMEOUT` — timeout em segundos (default 30s pra batches grandes)
 - `EMBEDDINGS_MAX_RETRIES` — tentativas em 5xx/conexão (default 3)
 
-Hoje só `"voyage"` é implementado. Pra adicionar `"openai"`:
+Providers: `"voyage"` (default, HTTP real) e `"fake"` (determinístico, offline —
+usado em teste e em ambiente sem credencial, ex. o signal de embedding do
+`ResumeVersion`). Pra adicionar `"openai"`:
 1. Cria `openai_client.py` herdando de `EmbeddingsClient`
 2. Adiciona branch no dispatch abaixo
 3. Documenta defaults específicos de modelo no header
@@ -16,10 +18,12 @@ Hoje só `"voyage"` é implementado. Pra adicionar `"openai"`:
 from decouple import config
 
 from .base import EmbeddingsClient, EmbeddingsError
+from .fake_client import DeterministicEmbeddingsClient
 from .voyage_client import VoyageEmbeddingsClient
 
 _DEFAULT_MODELS = {
     "voyage": "voyage-3",
+    "fake": "deterministic",
 }
 
 
@@ -53,6 +57,9 @@ def get_embeddings_client(
         if max_retries is not None
         else config("EMBEDDINGS_MAX_RETRIES", default=3, cast=int)
     )
+
+    if provider == "fake":
+        return DeterministicEmbeddingsClient()
 
     if provider == "voyage":
         return VoyageEmbeddingsClient(

@@ -22,3 +22,7 @@ DATABASES = {
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
+
+# Embeddings determinísticos e offline — o signal de embedding do ResumeVersion
+# roda em todo save(), então a suíte não pode depender de rede/credencial.
+EMBEDDINGS_PROVIDER = "fake"

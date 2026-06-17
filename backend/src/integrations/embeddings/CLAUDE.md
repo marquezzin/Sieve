@@ -12,6 +12,7 @@ sabe nada do domínio** — só fala HTTP com o provider e devolve `list[float]`
 | Provider | Default model | Dim | Quando usar |
 |---|---|---|---|
 | `voyage` (default) | `voyage-3` | 1024 | Texto técnico em geral (escolha do Sieve) |
+| `fake` | determinístico (hash de tokens) | `EMBEDDINGS_DIM` | Offline/sem credencial — teste e o signal de embedding do `ResumeVersion` (`EMBEDDINGS_PROVIDER=fake`) |
 | `openai` (TODO) | — | — | Custo menor; ainda não implementado |
 
 Pra adicionar provider novo: ver header de `factory.py`.
