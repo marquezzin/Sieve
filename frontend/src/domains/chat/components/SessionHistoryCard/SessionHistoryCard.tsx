@@ -2,11 +2,13 @@ import { Badge, Button, Group, Paper, Stack, Text } from '@mantine/core';
 import { formatRelative } from '@/lib/formatters';
 import {
   PHASE_LABELS,
+  interviewHeadline,
   summarizeCollectedData,
   summaryLine,
   type Session,
 } from '../../types';
 import { InterviewerAvatar } from '../InterviewerAvatar/InterviewerAvatar';
+import { RecapMetrics } from '../RecapMetrics/RecapMetrics';
 import { ArrowRightIcon, ChevronRightIcon } from '../icons';
 import classes from './SessionHistoryCard.module.css';
 
@@ -18,9 +20,12 @@ interface SessionHistoryCardProps {
 export function SessionHistoryCard({ session, onOpen }: SessionHistoryCardProps) {
   const isActive = session.status === 'active';
   const summary = summarizeCollectedData(session.collected_data);
-  const phaseLabel = isActive
-    ? PHASE_LABELS[session.current_phase]
-    : 'Concluída';
+  const headline = interviewHeadline(session.collected_data);
+
+  const hasMetrics =
+    summary.experiences + summary.education + summary.projects + summary.skills >
+    0;
+  const hasHeadline = Boolean(headline.name || headline.subtitle);
 
   return (
     <Paper
@@ -40,7 +45,7 @@ export function SessionHistoryCard({ session, onOpen }: SessionHistoryCardProps)
     >
       <Group gap="md" wrap="nowrap" align="flex-start">
         <InterviewerAvatar size={42} />
-        <Stack gap={6} flex={1} miw={0}>
+        <Stack gap={8} flex={1} miw={0}>
           <Group gap="xs" wrap="wrap">
             {isActive ? (
               <Badge color="terracotta" variant="light">
@@ -51,16 +56,38 @@ export function SessionHistoryCard({ session, onOpen }: SessionHistoryCardProps)
                 Concluída
               </Badge>
             )}
-            <Text fz="xs" c="dimmed">
-              {phaseLabel}
-            </Text>
+            {isActive && (
+              <Text fz="xs" c="dimmed">
+                {PHASE_LABELS[session.current_phase]}
+              </Text>
+            )}
             <Text fz="xs" c="dimmed">
               · {formatRelative(session.updated_at)}
             </Text>
           </Group>
-          <Text fz="sm" c="light-dark(#37312a, #e0d6c8)" lineClamp={1}>
-            {summaryLine(summary)}
-          </Text>
+
+          {hasHeadline && (
+            <div>
+              {headline.name && (
+                <Text fz="sm" fw={700} c="light-dark(#37312a, #e0d6c8)" lineClamp={1}>
+                  {headline.name}
+                </Text>
+              )}
+              {headline.subtitle && (
+                <Text fz="xs" c="dimmed" lineClamp={1}>
+                  {headline.subtitle}
+                </Text>
+              )}
+            </div>
+          )}
+
+          {hasMetrics ? (
+            <RecapMetrics summary={summary} />
+          ) : !hasHeadline ? (
+            <Text fz="sm" c="dimmed" lineClamp={1}>
+              {summaryLine(summary)}
+            </Text>
+          ) : null}
         </Stack>
 
         {isActive ? (

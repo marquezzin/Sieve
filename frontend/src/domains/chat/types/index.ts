@@ -302,3 +302,31 @@ export function summaryLine(summary: CollectedSummary): string {
   if (summary.skills > 0) parts.push(`${summary.skills} skills`);
   return parts.length > 0 ? parts.join(' · ') : 'Nenhum dado coletado ainda';
 }
+
+/**
+ * Cabeçalho humano de uma entrevista: o nome do candidato + um "headline"
+ * (cargo · empresa da 1ª experiência, ou curso · instituição como fallback).
+ * Dá significado ao card/atividade em vez de só contagens soltas — `name` e
+ * `subtitle` são `undefined` quando o dado ainda não foi coletado.
+ */
+export interface InterviewHeadline {
+  name?: string;
+  subtitle?: string;
+}
+
+export function interviewHeadline(
+  data: Record<string, unknown>,
+): InterviewHeadline {
+  const info = parsePersonalInfo(data);
+  const exp = parseExperiences(data)[0];
+  const edu = parseEducation(data)[0];
+
+  let subtitle: string | undefined;
+  if (exp && (exp.role || exp.company)) {
+    subtitle = [exp.role, exp.company].filter(Boolean).join(' · ');
+  } else if (edu && (edu.course || edu.institution)) {
+    subtitle = [edu.course, edu.institution].filter(Boolean).join(' · ');
+  }
+
+  return { name: info?.name, subtitle };
+}

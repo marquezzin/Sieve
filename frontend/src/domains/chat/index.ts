@@ -11,6 +11,7 @@ export type {
   MessageRole,
   Phase,
   CollectedSummary,
+  InterviewHeadline,
 } from './types';
 export {
   PHASE_LABELS,
@@ -19,4 +20,5 @@ export {
   canFinalize,
   summarizeCollectedData,
   summaryLine,
+  interviewHeadline,
 } from './types';

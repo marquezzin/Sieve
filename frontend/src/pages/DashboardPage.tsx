@@ -29,6 +29,7 @@ import { formatRelative } from '@/lib/formatters';
 import { useMe } from '@/domains/profile';
 import {
   PHASE_LABELS,
+  interviewHeadline,
   summarizeCollectedData,
   summaryLine,
   useSessions,
@@ -118,27 +119,47 @@ function buildActivity(resumes: Resume[], sessions: Session[]): ActivityItem[] {
   }
 
   for (const s of sessions) {
+    let node: ReactNode;
+    if (s.status === 'completed') {
+      const headline = interviewHeadline(s.collected_data);
+      node = headline.name ? (
+        <>
+          Entrevista de{' '}
+          <Text span fw={700} c="var(--mantine-color-text)">
+            {headline.name}
+          </Text>{' '}
+          concluída
+          {headline.subtitle ? (
+            <Text span c="dimmed">
+              {' '}
+              · {headline.subtitle}
+            </Text>
+          ) : null}
+        </>
+      ) : (
+        <>
+          Entrevista concluída —{' '}
+          <Text span fw={700} c="var(--mantine-color-text)">
+            {summaryLine(summarizeCollectedData(s.collected_data))}
+          </Text>
+        </>
+      );
+    } else {
+      node = (
+        <>
+          Entrevista em{' '}
+          <Text span fw={700} c="var(--mantine-color-text)">
+            {PHASE_LABELS[s.current_phase]}
+          </Text>
+        </>
+      );
+    }
     items.push({
       key: `session-${s.id}`,
       iso: s.updated_at,
       icon: Chat,
       tone: 'terracotta',
-      node:
-        s.status === 'completed' ? (
-          <>
-            Entrevista concluída —{' '}
-            <Text span fw={700} c="var(--mantine-color-text)">
-              {summaryLine(summarizeCollectedData(s.collected_data))}
-            </Text>
-          </>
-        ) : (
-          <>
-            Entrevista em{' '}
-            <Text span fw={700} c="var(--mantine-color-text)">
-              {PHASE_LABELS[s.current_phase]}
-            </Text>
-          </>
-        ),
+      node,
     });
   }
 
