@@ -36,3 +36,28 @@ def test_omits_empty_sections():
     assert html.count("<section>") == 1
     assert "Experiência Profissional" not in html
     assert "Formação" not in html
+
+
+def test_education_status_translated_to_portuguese():
+    # O status é valor de máquina ('done'/'in_progress'); no PDF sai em PT e o
+    # valor cru em inglês NUNCA aparece.
+    data = {
+        "education": [
+            {"course": "Eng. de Software", "institution": "USP", "status": "done"},
+            {"course": "Mestrado", "institution": "USP", "status": "in_progress"},
+        ]
+    }
+    html = render_structured_data_to_html(data)
+    assert "Concluído" in html
+    assert "Em andamento" in html
+    assert "done" not in html
+    assert "in_progress" not in html
+
+
+def test_education_unknown_status_renders_no_label():
+    # Status vazio/desconhecido não vaza nada (nem cru, nem rótulo).
+    data = {"education": [{"course": "Curso", "institution": "X", "status": "weird"}]}
+    html = render_structured_data_to_html(data)
+    assert "weird" not in html
+    # Sem datas nem rótulo → a linha de meta sai vazia (nenhum separador vazado).
+    assert '<p class="entry-meta"></p>' in html

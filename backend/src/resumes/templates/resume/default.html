@@ -80,7 +80,7 @@
     {% for edu in education %}
     <h3>{{ edu.course }}{% if edu.institution %} — {{ edu.institution }}{% endif %}</h3>
     <p class="entry-meta">
-      {% if edu.start %}{{ edu.start }}{% endif %}{% if edu.end %} – {{ edu.end }}{% endif %}{% if edu.status %} · {{ edu.status }}{% endif %}
+      {% if edu.start %}{{ edu.start }}{% endif %}{% if edu.end %} – {{ edu.end }}{% endif %}{% if edu.status_label %} · {{ edu.status_label }}{% endif %}
     </p>
     {% endfor %}
   </section>
