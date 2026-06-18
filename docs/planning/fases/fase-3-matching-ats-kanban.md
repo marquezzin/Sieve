@@ -1,7 +1,52 @@
-# Fase 3 — Matching semântico + ATS optimizer + Kanban de candidaturas
+# Fase 3 — Matching semântico + recomendações honestas + Kanban de candidaturas
 
-**Status:** 🔲 Pendente
-**Pré-requisitos:** Fase 2 ✅ (precisa de `ResumeVersion` com `structured_data` pra otimizar e calcular match)
+**Status:** ✅ Done
+**Entregue em:** 2026-06-17
+**Pré-requisitos:** Fase 2 ✅ (precisa de `ResumeVersion` com `structured_data` pra calcular match)
+
+## Entrega (2026-06-17)
+
+Executada em **sub-fases** (3.1–3.7), com avaliação do usuário entre cada uma.
+
+**Divergência principal — o otimizador ATS foi REMOVIDO** (ver
+[ADR 0004](../../decisions/0004-remover-otimizador-curriculo.md)). Em teste real, o
+otimizador **fabricou** skills/tech que o candidato não tinha; o guardrail post-hoc
+só cobria identidade (empresas/cargos/instituições), não skills/bullets. Em vez de
+entrar numa corrida gato-e-rato com o LLM, o produto passou a entregar só a
+**análise honesta + recomendações detalhadas** como diferencial. Saíram:
+`RunAtsOptimizer`, `OptimizeView`/`POST /matching/optimize/`, a chain Celery do
+optimizer, o setting `LLM_MODEL_ATS_OPTIMIZER` e a v3 do João.
+
+**O que ficou pronto:**
+
+- **3.1 — Embedding de `ResumeVersion`**: `VectorField(1024)` + signal `pre_save`
+  (recalcula só quando `structured_data` muda, via hash) + `DeterministicEmbeddingsClient`
+  (fake offline) + mgmt command `backfill_resume_embeddings`.
+- **3.2 — App `matching/`**: `JobPosting` (+ keywords via LLM + embedding) e
+  `MatchAnalysis` (score coseno + matched/missing skills + recomendações). Use cases
+  `IngestJobPosting` e `ComputeMatch` (cache por par, `?refresh=true`). Frontend
+  `domains/matching/` (porte do `jobs.jsx`): análise + detalhe da vaga.
+- **3.3 → revertido**: otimizador ATS (entregue e depois removido — ver ADR 0004).
+- **Recomendações honestas e detalhadas**: contrato `list[{title, detail, category}]`
+  (`realce`/`enfase`/`gap`) — o entregável principal, nunca manda fabricar.
+- **3.4–3.6 — Kanban (`applications/`)**: backend (`Application` + `move`) e frontend
+  `domains/applications/` (porte do `kanban.jsx`): board com 6 colunas,
+  drag-and-drop via `@dnd-kit/core` + optimistic update, modal de criação (com
+  "Usar exemplo" + `DatePickerInput`/`@mantine/dates`), modal de detalhe ao clicar,
+  confirmação ao remover. Lista sem paginação (board inteiro). Seed de 25
+  candidaturas de demo (`seed_applications`).
+- **Polimento de UX (matching)**: `CompanyAvatar` (gradiente quente determinístico,
+  promovido a átomo compartilhado), página única sem tabs com modal de análise,
+  guia "3 passos", widget "Aderência às últimas vagas" no dashboard (`top_score`
+  anotado na lista) e `Sparkline` nos StatCards (séries reais, ≥2 pontos).
+- **3.7 — Testes**: 26 novos (matching ingest/compute/api, applications api, signal
+  de embedding) + factories. Corrigido o isolamento de embeddings na suíte (a
+  factory lê `decouple`, não settings Django → forçada a env var em `settings/test.py`
+  pra não bater na Voyage real). Gate **`make test-fast` = 236 passed, 1 skipped**.
+
+> O restante deste arquivo é o **plano original** da fase (pré-execução), mantido
+> como referência histórica. Onde ele menciona o otimizador ATS, vale a entrega
+> acima + o ADR 0004.
 
 ## Contexto
 
