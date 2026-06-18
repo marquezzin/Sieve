@@ -42,6 +42,7 @@ import {
   type Resume,
 } from '@/domains/resume';
 import { JobAdherenceList } from '@/domains/matching';
+import { useApplications } from '@/domains/applications';
 import { ComingSoonPanel } from './dashboard/ComingSoonPanel';
 import { ContinueHero } from './dashboard/ContinueHero';
 import { OnboardingCard } from './dashboard/OnboardingCard';
@@ -194,9 +195,17 @@ export function DashboardPage() {
   const meQuery = useMe();
   const sessionsQuery = useSessions();
   const resumesQuery = useResumes();
+  const applicationsQuery = useApplications();
 
   const sessions = useMemo(() => sessionsQuery.data ?? [], [sessionsQuery.data]);
   const resumes = useMemo(() => resumesQuery.data ?? [], [resumesQuery.data]);
+  const applications = useMemo(
+    () => applicationsQuery.data ?? [],
+    [applicationsQuery.data],
+  );
+  // Ativas = tudo que não foi recusado. Série cumulativa real pro sparkline.
+  const activeApplications = applications.filter((a) => a.status !== 'rejected');
+  const applicationsSpark = applications.map((_, i) => i + 1);
 
   const activeSession = useMemo(
     () => sessions.find((s) => s.status === 'active'),
@@ -368,11 +377,36 @@ export function DashboardPage() {
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, sm: 4 }}>
-          <StatCard icon={Kanban} label="Candidaturas ativas" tone="green">
-            <Text fz={13} c="dimmed" mt={4} lh={1.4}>
-              Acompanhamento de candidaturas chega numa próxima fase.
-            </Text>
-          </StatCard>
+          <StatCard
+            icon={Kanban}
+            label="Candidaturas ativas"
+            value={activeApplications.length}
+            tone="green"
+            spark={applicationsSpark}
+            sparkColor="#2f9e44"
+            foot={
+              applications.length > 0 ? (
+                <Group justify="space-between" gap="xs" wrap="nowrap">
+                  <Text fz={12.5} c="dimmed">
+                    {applications.length} no funil
+                  </Text>
+                  <UnstyledButton
+                    onClick={() => navigate('/applications')}
+                    c="terracotta.7"
+                    fz={12.5}
+                    fw={700}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                  >
+                    Ver Kanban <ChevronRight size={13} />
+                  </UnstyledButton>
+                </Group>
+              ) : (
+                <Text fz={12.5} c="dimmed">
+                  Crie candidaturas no Kanban para acompanhar o funil.
+                </Text>
+              )
+            }
+          />
         </Grid.Col>
       </Grid>
 

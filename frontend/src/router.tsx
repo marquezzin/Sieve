@@ -30,6 +30,9 @@ const JobAnalysisPage = lazy(() =>
 const JobDetailPage = lazy(() =>
   import('@/domains/matching').then((m) => ({ default: m.JobDetailPage })),
 );
+const KanbanPage = lazy(() =>
+  import('@/domains/applications').then((m) => ({ default: m.KanbanPage })),
+);
 
 const withSuspense = (node: ReactNode) => (
   <Suspense fallback={<FullPageLoader />}>{node}</Suspense>
@@ -75,6 +78,10 @@ export const router = createBrowserRouter([
       {
         path: 'matching/jobs/:id',
         element: withSuspense(<JobDetailPage />),
+      },
+      {
+        path: 'applications',
+        element: withSuspense(<KanbanPage />),
       },
     ],
   },

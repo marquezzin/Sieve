@@ -13,12 +13,15 @@ import {
 } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { ModalsProvider } from '@mantine/modals';
+import { DatesProvider } from '@mantine/dates';
 import { QueryClientProvider } from '@tanstack/react-query';
+import 'dayjs/locale/pt-br';
 import { router } from './router';
 import { queryClient } from './lib/queryClient';
 
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
+import '@mantine/dates/styles.css';
 import './styles/global.css';
 
 // Terracota/clay — IDV do Sieve. Acento em torno de #cf5530 (índices 5/6).
@@ -149,11 +152,13 @@ createRoot(rootEl).render(
     <ColorSchemeScript defaultColorScheme="light" />
     <MantineProvider theme={theme} defaultColorScheme="light">
       <Notifications />
-      <ModalsProvider>
-        <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} />
-        </QueryClientProvider>
-      </ModalsProvider>
+      <DatesProvider settings={{ locale: 'pt-br', firstDayOfWeek: 0 }}>
+        <ModalsProvider>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        </ModalsProvider>
+      </DatesProvider>
     </MantineProvider>
   </StrictMode>,
 );

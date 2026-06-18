@@ -31,4 +31,9 @@ export {
   Lightbulb,
   Alert,
   Clock,
+  Plus,
+  Calendar,
+  Link,
+  GripVertical,
+  Trash,
 } from './Icon';

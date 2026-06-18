@@ -54,7 +54,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Chat', icon: Chat, to: '/chat', tag: 'IA' },
   { label: 'Currículos', icon: File, to: '/resumes' },
   { label: 'Vagas', icon: Briefcase, to: '/matching' },
-  { label: 'Candidaturas', icon: Kanban, count: 5, soon: true },
+  { label: 'Candidaturas', icon: Kanban, to: '/applications' },
   { label: 'Perfil', icon: User, to: '/profile' },
 ];
 

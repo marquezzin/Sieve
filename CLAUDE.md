@@ -34,6 +34,8 @@ Frontend domains são modelados por **intenção do usuário**, não 1:1 com Dja
 | `core` | `auth` | login, JWT, refresh |
 | `accounts` | `profile` | ver/editar perfil do candidato (`/me/`) |
 | `chat` + `agents` | `chat` | entrevista conversacional + histórico de sessões |
+| `matching` | `matching` | colar vaga → score de aderência + skills + recomendações |
+| `applications` | `applications` | Kanban de candidaturas (arrastar entre estágios) |
 
 Adicionar linhas conforme apps novos forem criados.
 

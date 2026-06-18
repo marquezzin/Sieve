@@ -7,7 +7,7 @@ App SPA do Sieve. Stack segue o [ADR 0001](../docs/decisions/0001-stack-padrao.m
 - **Vite 8** — bundler/dev server (HMR).
 - **React 19.2** — runtime.
 - **TypeScript 6** strict — sem `any`, `unknown` + narrow.
-- **Mantine v9** — UI lib (core + form + hooks + modals + notifications). Imports SEMPRE do root: `from '@mantine/core'`. Nunca subpath.
+- **Mantine v9** — UI lib (core + form + hooks + modals + notifications + dates). Imports SEMPRE do root (ex.: `from '@mantine/core'`, `from '@mantine/dates'`). Nunca subpath. `@mantine/dates` requer `dayjs` + `DatesProvider` (locale pt-BR) no `main.tsx`.
 - **TanStack Query v5** — server state (cache, refetch, mutations).
 - **React Router v7** — `createBrowserRouter` + `RouterProvider`. `React.lazy` em todas as pages.
 - **axios 1.15** — HTTP client. Toda call passa pelo `apiClient` único em `domains/auth/api/client.ts`.
