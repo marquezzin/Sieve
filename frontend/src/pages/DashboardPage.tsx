@@ -15,7 +15,6 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import {
-  Briefcase,
   ChevronRight,
   Chat,
   File,
@@ -42,6 +41,7 @@ import {
   useResumes,
   type Resume,
 } from '@/domains/resume';
+import { JobAdherenceList } from '@/domains/matching';
 import { ComingSoonPanel } from './dashboard/ComingSoonPanel';
 import { ContinueHero } from './dashboard/ContinueHero';
 import { OnboardingCard } from './dashboard/OnboardingCard';
@@ -83,6 +83,27 @@ function bestScore(resumes: Resume[]): number | null {
     if (s !== null && (best === null || s > best)) best = s;
   }
   return best;
+}
+
+/** Hex do sparkline por faixa de nota (espelha `scoreTone`/`TONE_COLOR`). */
+const SPARK_HEX: Record<string, string> = {
+  green: '#2f9e44',
+  yellow: '#f08c00',
+  red: '#e03131',
+};
+
+/** Currículos em ordem de criação (asc) — base honesta pras séries do sparkline. */
+function resumesByCreation(resumes: Resume[]): Resume[] {
+  return [...resumes].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+  );
+}
+
+/** Série de scores reais por currículo, em ordem cronológica (≥ 2 → desenha). */
+function scoreSeries(resumes: Resume[]): number[] {
+  return resumesByCreation(resumes)
+    .map((r) => parseScore(r.latest_score))
+    .filter((s): s is number => s !== null);
 }
 
 function buildActivity(resumes: Resume[], sessions: Session[]): ActivityItem[] {
@@ -258,6 +279,12 @@ export function DashboardPage() {
   const topScoreColor =
     topScore !== null ? TONE_COLOR[scoreTone(topScore)] : 'gray';
 
+  // Sparklines com dados REAIS — só desenham com ≥ 2 pontos (sem fabricar tendência).
+  const countSpark = resumes.map((_, i) => i + 1); // contagem cumulativa de currículos
+  const scoreSpark = scoreSeries(resumes); // nota por currículo, em ordem cronológica
+  const scoreSparkColor =
+    topScore !== null ? SPARK_HEX[scoreTone(topScore)] : undefined;
+
   return (
     <Box maw={1160} mx="auto" px={{ base: 'sm', lg: 'lg' }} py="md">
       {/* Cabeçalho */}
@@ -289,6 +316,8 @@ export function DashboardPage() {
             value={resumes.length}
             unit={resumes.length === 1 ? 'versão' : 'versões'}
             tone="terracotta"
+            spark={countSpark}
+            sparkColor="#cf5530"
             foot={
               <Text fz={12.5} c="dimmed">
                 {recentResumes.length > 0 ? (
@@ -313,6 +342,8 @@ export function DashboardPage() {
             value={topScore !== null ? topScore.toFixed(1) : '—'}
             unit={topScore !== null ? '/ 10' : undefined}
             tone="blue"
+            spark={scoreSpark}
+            sparkColor={scoreSparkColor}
             foot={
               topScore !== null ? (
                 <Group gap="sm" wrap="nowrap">
@@ -382,13 +413,22 @@ export function DashboardPage() {
             </Paper>
           )}
 
-          <SectionLabel>Aderência às últimas vagas</SectionLabel>
-          <ComingSoonPanel
-            icon={Briefcase}
-            title="Análise de aderência a vagas"
-            description="Cole uma vaga e veja, em porcentagem, o quanto seu currículo combina com ela."
-            badge="Em breve · Vagas"
-          />
+          <SectionLabel
+            right={
+              <UnstyledButton
+                onClick={() => navigate('/matching')}
+                c="terracotta.7"
+                fz={13}
+                fw={700}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+              >
+                Analisar vaga <ChevronRight size={14} />
+              </UnstyledButton>
+            }
+          >
+            Aderência às últimas vagas
+          </SectionLabel>
+          <JobAdherenceList />
         </Grid.Col>
 
         {/* Coluna lateral */}

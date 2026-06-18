@@ -2,6 +2,7 @@ import type { ComponentType, ReactNode } from 'react';
 import { Box, Group, Paper, Text } from '@mantine/core';
 import type { IconProps } from '@/components/atoms/Icon';
 import { IconChip, type IconChipTone } from '@/components/atoms/IconChip';
+import { Sparkline } from '@/components/atoms/Sparkline/Sparkline';
 
 export type StatCardTone = IconChipTone;
 
@@ -13,6 +14,10 @@ interface StatCardProps {
   /** Sufixo curto ao lado do valor (ex.: "versões", "/ 10"). */
   unit?: string;
   tone?: StatCardTone;
+  /** Série pro mini-gráfico no canto (≥ 2 pontos reais; omitido se ausente). */
+  spark?: number[];
+  /** Cor do sparkline (hex). Default terracotta da IDV. */
+  sparkColor?: string;
   /** Conteúdo do rodapé, separado por um divisor. */
   foot?: ReactNode;
   /** Conteúdo principal alternativo (substitui value/unit) — ex.: placeholder. */
@@ -30,13 +35,18 @@ export function StatCard({
   value,
   unit,
   tone = 'terracotta',
+  spark,
+  sparkColor,
   foot,
   children,
 }: StatCardProps) {
   return (
     <Paper withBorder radius="lg" p="lg" h="100%">
-      <Group justify="space-between" align="flex-start">
+      <Group justify="space-between" align="flex-start" wrap="nowrap">
         <IconChip icon={Icon} tone={tone} size={44} iconSize={20} />
+        {spark && spark.length >= 2 && (
+          <Sparkline data={spark} color={sparkColor} />
+        )}
       </Group>
 
       <Text fz={13} fw={600} c="dimmed" mt="md">
