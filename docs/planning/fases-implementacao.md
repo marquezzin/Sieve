@@ -39,6 +39,7 @@ Quando o usuário disser **"faça a próxima fase de implementação"**:
 | 2 | Pipeline multi-agente (writer/reviewer/judge) + Resume/versões + PDF | ✅ Done | [fase-2-pipeline-multiagente-pdf.md](fases/fase-2-pipeline-multiagente-pdf.md) |
 | 3 | Matching semântico + recomendações honestas + Kanban de candidaturas | ✅ Done | [fase-3-matching-ats-kanban.md](fases/fase-3-matching-ats-kanban.md) |
 | 4 | Foto profissional + polimento UI + relatório acadêmico + apresentação | 🔲 Pendente | [fase-4-foto-polish-relatorio.md](fases/fase-4-foto-polish-relatorio.md) |
+| 5 | Criar currículo a partir de um existente (chat "top-up") | 🔲 Pendente | [fase-5-curriculo-a-partir-de-existente.md](fases/fase-5-curriculo-a-partir-de-existente.md) |
 
 ## Adicionar fase nova
 
