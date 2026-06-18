@@ -38,6 +38,9 @@ Tudo escopado ao `request.user` via `get_queryset` (isolamento). `IsAuthenticate
 - **`move` separado do update** — mudar de coluna é a ação mais frequente do
   Kanban; endpoint dedicado e atômico (`update_fields=["status", "updated_at"]`),
   alvo do optimistic update no frontend.
+- **`pagination_class = None`** — o board carrega todas as colunas de uma vez, então
+  `GET /` volta ARRAY direto (sem envelope de paginação). Paginar truncaria o
+  Kanban em 20 cards e quebraria o contrato esperado pelo frontend.
 
 ## NÃO faz
 

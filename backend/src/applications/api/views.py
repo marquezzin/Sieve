@@ -16,7 +16,14 @@ from applications.models import Application
 
 
 class ApplicationViewSet(viewsets.ModelViewSet):
-    """CRUD de candidaturas do usuário autenticado + `move` (muda status)."""
+    """CRUD de candidaturas do usuário autenticado + `move` (muda status).
+
+    `pagination_class = None`: o Kanban carrega o board inteiro de uma vez (todas
+    as colunas), então a lista volta como ARRAY direto — paginar truncaria o board
+    e quebraria o contrato (igual aos outros lists de domínio).
+    """
+
+    pagination_class = None
 
     def get_queryset(self):
         return Application.objects.filter(user=self.request.user)
