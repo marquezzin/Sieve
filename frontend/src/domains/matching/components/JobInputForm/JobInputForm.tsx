@@ -125,8 +125,8 @@ export function JobInputForm({
             description="Quanto mais completa, melhor o matching."
             placeholder="Cole aqui o texto da vaga…"
             autosize
-            minRows={9}
-            maxRows={18}
+            minRows={6}
+            maxRows={12}
             {...form.getInputProps('description')}
           />
 

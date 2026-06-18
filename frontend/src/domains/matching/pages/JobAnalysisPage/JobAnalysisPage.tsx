@@ -83,7 +83,7 @@ function AnalyzingCard() {
   );
 }
 
-/** Card de passo numerado (faixa horizontal "como funciona"). */
+/** Passo numerado (linha vertical do guia "como funciona"). */
 function HowItWorksStep({
   index,
   title,
@@ -94,56 +94,57 @@ function HowItWorksStep({
   desc: string;
 }) {
   return (
-    <Paper withBorder radius="md" p="md" h="100%">
-      <Group gap="xs" align="center" mb={6} wrap="nowrap">
-        <Box
-          style={{
-            display: 'grid',
-            placeItems: 'center',
-            width: 26,
-            height: 26,
-            borderRadius: 999,
-            flexShrink: 0,
-            fontSize: 13,
-            fontWeight: 800,
-            color: '#fff',
-            background:
-              'linear-gradient(135deg, var(--mantine-color-terracotta-5), var(--mantine-color-terracotta-7))',
-            boxShadow: '0 2px 6px -2px var(--mantine-color-terracotta-7)',
-          }}
-        >
-          {index}
-        </Box>
+    <Group gap="sm" align="flex-start" wrap="nowrap">
+      <Box
+        style={{
+          display: 'grid',
+          placeItems: 'center',
+          width: 26,
+          height: 26,
+          borderRadius: 999,
+          flexShrink: 0,
+          fontSize: 13,
+          fontWeight: 800,
+          color: '#fff',
+          background:
+            'linear-gradient(135deg, var(--mantine-color-terracotta-5), var(--mantine-color-terracotta-7))',
+          boxShadow: '0 2px 6px -2px var(--mantine-color-terracotta-7)',
+        }}
+      >
+        {index}
+      </Box>
+      <Box>
         <Text fz={14} fw={700} c="var(--mantine-color-text)">
           {title}
         </Text>
-      </Group>
-      <Text fz={13} c="dimmed" lh={1.55}>
-        {desc}
-      </Text>
-    </Paper>
+        <Text fz={13} c="dimmed" lh={1.55} mt={2}>
+          {desc}
+        </Text>
+      </Box>
+    </Group>
   );
 }
 
 /**
- * Estado inicial (sem análise): faixa horizontal "como funciona" abaixo do form —
- * preenche a largura e elimina o vazio que sobrava ao lado do form.
+ * Estado inicial (sem análise): painel lateral "como funciona" — guia em 3 passos
+ * + dica, empilhados pra equilibrar a altura do form ao lado (sem vazio).
  */
-function HowItWorksStrip() {
+function HowItWorksPanel() {
   return (
-    <Box>
-      <Group gap="xs" align="center" mb="sm">
-        <IconChip icon={Sparkles} tone="terracotta" size={34} iconSize={16} />
+    <Paper withBorder radius="lg" p="lg" h="100%">
+      <Group gap="xs" align="center" mb="lg">
+        <IconChip icon={Sparkles} tone="terracotta" size={38} iconSize={18} />
         <Box>
-          <Text fz={14} fw={800} c="var(--mantine-color-text)">
+          <Text fz={15} fw={800} c="var(--mantine-color-text)">
             Aderência em 3 passos
           </Text>
-          <Text fz={12} c="dimmed">
+          <Text fz={12.5} c="dimmed">
             Análise honesta, sem reescrever seu currículo.
           </Text>
         </Box>
       </Group>
-      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
+
+      <Stack gap="lg">
         <HowItWorksStep
           index={1}
           title="Cole a vaga"
@@ -159,8 +160,24 @@ function HowItWorksStrip() {
           title="Veja a aderência"
           desc="Score, skills que batem e que faltam, e recomendações detalhadas pra mandar bem."
         />
-      </SimpleGrid>
-    </Box>
+      </Stack>
+
+      <Box
+        mt="lg"
+        p="md"
+        style={{
+          borderRadius: 12,
+          background:
+            'light-dark(var(--mantine-color-terracotta-0), var(--mantine-color-dark-6))',
+        }}
+      >
+        <Text fz={13} lh={1.55} c="light-dark(var(--mantine-color-terracotta-9), var(--mantine-color-terracotta-2))">
+          💡 <Text span fw={700}>Dica:</Text> cole a descrição completa da vaga —
+          requisitos, responsabilidades e diferenciais. Quanto mais sinal, mais
+          precisa fica a aderência.
+        </Text>
+      </Box>
+    </Paper>
   );
 }
 
@@ -220,19 +237,16 @@ function AnalyzeSection() {
     <MatchResult analysis={result.analysis} />
   ) : null;
 
-  if (!output) {
-    return (
-      <Stack gap="lg" maw={760} mx="auto">
-        {form}
-        <HowItWorksStrip />
-      </Stack>
-    );
-  }
-
   return (
-    <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="lg" style={{ alignItems: 'start' }}>
+    <SimpleGrid
+      cols={{ base: 1, lg: 2 }}
+      spacing="lg"
+      // Vazio: estica pra o painel-guia casar a altura do form. Com resultado:
+      // alinha ao topo (form e saída ficam na altura natural).
+      style={{ alignItems: output ? 'start' : 'stretch' }}
+    >
       {form}
-      <Box>{output}</Box>
+      {output ? <Box>{output}</Box> : <HowItWorksPanel />}
     </SimpleGrid>
   );
 }
