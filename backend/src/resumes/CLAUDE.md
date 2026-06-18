@@ -60,22 +60,24 @@ existe, 403 se de outro usuário). `IsAuthenticated` default.
 | GET | `/{id}/` | detalhe: meta + `latest_version` completa (com score) + lista resumida de versões |
 | GET | `/{id}/versions/` | todas as versões completas |
 | GET | `/{id}/versions/{n}/` | versão específica completa |
-| GET | `/{id}/versions/{n}/pdf/` | **download binário** (`application/pdf`, attachment) — não passa pelo envelope |
+| GET | `/{id}/versions/{n}/pdf/` | **download binário** do PDF ATS-safe (`application/pdf`, attachment) — não passa pelo envelope. (O modelo "visual" é capturado no frontend, não aqui.) |
 | GET | `/{id}/versions/{n1}/diff/{n2}/` | `{from, to, changes:[...]}` (envelope normal) |
 
 ## Use cases
 
 - `render_to_html.render_structured_data_to_html(structured_data) -> str` —
-  template `resume/default.html`. UMA `<section>` por área presente; seções
-  vazias omitidas. ATS-safe: sans-serif, sem tabelas/colunas/imagens, hierarquia
-  por headings, CSS inline conservador (browser + WeasyPrint).
+  template `resume/default.html`. UMA `<section>` por área presente; seções vazias
+  omitidas. ATS-safe: sans-serif, sem tabelas/colunas/imagens, hierarquia por
+  headings, CSS inline conservador (browser + WeasyPrint).
 - `compute_diff.compute_diff(old, new) -> list[Change]` — diff semântico por
   seção. `Change = {type: add|rem|mod, section, before, after}`. Entradas casadas
   por `id` estável; bullets alinhados por índice. Skills por diferença de
   conjunto.
-- `render_to_pdf.render_version_to_pdf(version) -> bytes` — delega pra
-  `integrations.pdf.factory.get_pdf_renderer().render(html)`. PDF é **on-demand,
-  sem cache** (não persiste bytes; regenera a cada download).
+- `render_to_pdf.render_version_to_pdf(version) -> bytes` — **re-renderiza** o
+  `structured_data` (fonte da verdade) no template atual e delega pra
+  `integrations.pdf.factory.get_pdf_renderer().render(html)`. NÃO usa o
+  `html_rendered` congelado — assim melhorias no template valem retroativamente.
+  PDF é **on-demand, sem cache** (regenera a cada download).
 
 ## Decisões
 
@@ -92,6 +94,15 @@ existe, 403 se de outro usuário). `IsAuthenticated` default.
 - **PDF on-demand sem cache** — currículo muda pouco, regenerar é barato, e cache
   de binário invalidaria a cada nova versão. Endpoint devolve 503 (não 500)
   quando a stack de PDF (lib opt-in WeasyPrint) não está disponível.
+- **PDF re-renderiza do `structured_data`, não do `html_rendered`** — o template é
+  a fonte da verdade; melhorias (espaçamento, tradução de status etc.) valem pra
+  currículos já gerados sem precisar regenerar. O `html_rendered` continua sendo o
+  snapshot do writer, mas não alimenta mais o PDF (fica como artefato/legado).
+- **Dois modelos de PDF, gerados em camadas diferentes** — `ATS` (este endpoint,
+  WeasyPrint, **texto vetorial selecionável**, essencial pra parsers) e `visual`
+  (**capturado no frontend** como imagem do `ResumePreview` — cópia fiel do card do
+  Sieve). O visual é raster de propósito (o usuário quer idêntico à tela); a tese
+  ATS fica preservada no modelo padrão.
 
 ## NÃO faz
 

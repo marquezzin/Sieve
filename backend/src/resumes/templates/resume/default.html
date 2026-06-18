@@ -11,28 +11,31 @@
     body {
       font-family: Arial, Helvetica, "Segoe UI", sans-serif;
       font-size: 11pt;
-      line-height: 1.4;
+      line-height: 1.45;
       color: #1a1a1a;
       max-width: 800px;
       margin: 0 auto;
-      padding: 32px 40px;
+      padding: 44px 48px;
     }
-    h1 { font-size: 22pt; margin: 0 0 4px; }
+    h1 { font-size: 23pt; margin: 0 0 10px; letter-spacing: -0.01em; }
     h2 {
-      font-size: 13pt;
+      font-size: 12.5pt;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
       border-bottom: 1px solid #444;
-      padding-bottom: 3px;
-      margin: 22px 0 10px;
+      padding-bottom: 4px;
+      margin: 26px 0 12px;
     }
-    h3 { font-size: 12pt; margin: 12px 0 2px; }
+    h3 { font-size: 12pt; margin: 14px 0 2px; }
+    h3:first-of-type { margin-top: 0; }
     p { margin: 4px 0; }
-    ul { margin: 6px 0; padding-left: 20px; }
-    li { margin: 3px 0; }
-    .contact { font-size: 10pt; color: #444; margin: 0 0 4px; }
-    .entry-meta { font-size: 10pt; color: #555; margin: 0 0 4px; }
-    .tech { font-size: 10pt; color: #444; margin: 4px 0 0; }
+    ul { margin: 8px 0 0; padding-left: 20px; }
+    li { margin: 4px 0; }
+    /* Cabeçalho com respiro: contatos numa linha arejada, resumo destacado. */
+    .contact { font-size: 10.5pt; color: #555; line-height: 1.7; margin: 0 0 14px; }
+    .summary { margin: 0; }
+    .entry-meta { font-size: 10pt; color: #666; margin: 0 0 2px; }
+    .tech { font-size: 10pt; color: #555; margin: 6px 0 0; }
     .skills-list { margin: 0; padding: 0; list-style: none; }
     .skills-list li { display: inline; }
     .skills-list li:not(:last-child)::after { content: " · "; color: #888; }
@@ -52,7 +55,7 @@
       {% if personal_info.github_url %} | {{ personal_info.github_url }}{% endif %}
     </p>
     {% endif %}
-    {% if summary %}<p>{{ summary }}</p>{% endif %}
+    {% if summary %}<p class="summary">{{ summary }}</p>{% endif %}
   </section>
   {% endif %}
 

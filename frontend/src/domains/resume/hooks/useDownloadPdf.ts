@@ -7,15 +7,16 @@ interface DownloadArgs {
   versionNumber: number;
 }
 
-/** Baixa o PDF de uma versão; notifica sucesso/erro. */
+/** Baixa o PDF ATS (modelo padrão, gerado no backend); notifica sucesso/erro. */
 export function useDownloadPdf() {
   return useMutation<void, Error, DownloadArgs>({
-    mutationFn: ({ id, versionNumber }) => downloadVersionPdf(id, versionNumber),
+    mutationFn: ({ id, versionNumber }) =>
+      downloadVersionPdf(id, versionNumber),
     onSuccess: () => {
       notifications.show({
         color: 'green',
         title: 'PDF exportado',
-        message: 'Seu currículo ATS-safe foi baixado.',
+        message: 'Seu currículo ATS foi baixado.',
       });
     },
     onError: () => {

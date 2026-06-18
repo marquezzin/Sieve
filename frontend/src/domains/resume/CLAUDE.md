@@ -33,6 +33,22 @@ DRF serializa `DecimalField` como string (`overall: "8.44"`, `latest_score`).
 Sempre converta com `parseScore(value)` (`types/`), que faz `Number()` + narrow
 e devolve `number | null`. Nunca compare a string crua.
 
+## Dois modelos de PDF (menu de export)
+
+O botão "Exportar PDF" (no `ResumeDetailPage`) é um `Menu` com dois modelos + uma
+dica de escolha:
+
+- **Modelo padrão (ATS)** — `useDownloadPdf` → backend (`/pdf/`, WeasyPrint).
+  Texto **vetorial selecionável**, ATS-safe. É o recomendado pela dica.
+- **Modelo visual** — `useExportVisualPdf` → **captura client-side**: `html-to-image`
+  (`toPng`, pixelRatio 2, fundo branco) rasteriza o nó do `ResumePreview` (via
+  `previewRef`) e o `jspdf` monta um PDF A4 paginado. É uma **cópia fiel do card**
+  (imagem, não selecionável) — o usuário pediu idêntico à tela; a versão vetorial
+  recriada no servidor ficava "muito diferente", então voltamos pra captura exata.
+
+O `ResumePreview` é envolto num `<Box ref={previewRef}>` no page só pra dar o nó
+da captura.
+
 ## Gotcha do PDF (binário vs envelope)
 
 O interceptor de resposta do `apiClient` desembrulha todo response como envelope

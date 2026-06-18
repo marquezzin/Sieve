@@ -37,5 +37,27 @@ def test_produces_valid_pdf_bytes(monkeypatch):
     assert pdf == FAKE_PDF
     assert pdf.startswith(b"%PDF")
     assert len(pdf) > 1024
-    # Delegou o HTML materializado da versão.
-    assert fake.render_calls == [version.html_rendered]
+
+
+@pytest.mark.django_db
+def test_rerenders_from_structured_data_not_frozen_html(monkeypatch):
+    # O PDF re-renderiza do structured_data (template atual), NÃO usa o
+    # html_rendered congelado — melhorias no template valem retroativamente.
+    from resumes.tests.factories import SAMPLE_STRUCTURED
+
+    fake = FakeRenderer()
+    monkeypatch.setattr(
+        "resumes.use_cases.render_to_pdf.get_pdf_renderer",
+        lambda: fake,
+    )
+    version = ResumeVersionFactory(
+        html_rendered="<html><body>HTML CONGELADO</body></html>",
+        structured_data=dict(SAMPLE_STRUCTURED),
+    )
+
+    render_version_to_pdf(version)
+
+    rendered_html = fake.render_calls[0]
+    assert rendered_html != version.html_rendered
+    assert "HTML CONGELADO" not in rendered_html
+    assert SAMPLE_STRUCTURED["personal_info"]["name"] in rendered_html

@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import { useRef, type ComponentType } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
@@ -9,6 +9,7 @@ import {
   Grid,
   Group,
   Loader,
+  Menu,
   Paper,
   Stack,
   Text,
@@ -18,13 +19,16 @@ import {
 import {
   Alert as AlertIcon,
   CheckCircle,
+  ChevronDown,
   ChevronRight,
   Download,
+  File,
   type IconProps,
   Lightbulb,
   PenLine,
   Refresh,
   Search,
+  Sparkles,
   Stars,
 } from '@/components/atoms/Icon';
 import { ScoreGauge } from '../../components/ScoreGauge/ScoreGauge';
@@ -33,6 +37,7 @@ import { ResumePreview } from '../../components/ResumePreview/ResumePreview';
 import { VersionList } from '../../components/VersionList/VersionList';
 import { useResume } from '../../hooks/useResume';
 import { useDownloadPdf } from '../../hooks/useDownloadPdf';
+import { useExportVisualPdf } from '../../hooks/useExportVisualPdf';
 import {
   isGenerating,
   parseScore,
@@ -86,15 +91,28 @@ const PIPELINE: PipelineStep[] = [
 
 function DetailReady({ resume }: { resume: ResumeDetail }) {
   const downloadMutation = useDownloadPdf();
+  const visualExport = useExportVisualPdf();
   const navigate = useNavigate();
+  const previewRef = useRef<HTMLDivElement>(null);
   const version = resume.latest_version;
   const score = parseScore(version?.score?.overall ?? resume.latest_score);
   const versionNumber = resume.latest_version_number;
+  const exporting = downloadMutation.isPending || visualExport.isPending;
+
+  function exportVisual() {
+    if (!previewRef.current) return;
+    visualExport.mutate({
+      node: previewRef.current,
+      filename: `curriculo-${resume.id}-visual`,
+    });
+  }
 
   return (
     <Grid gutter="lg" align="start">
       <Grid.Col span={{ base: 12, lg: 8 }}>
-        <ResumePreview data={version?.structured_data} />
+        <Box ref={previewRef}>
+          <ResumePreview data={version?.structured_data} />
+        </Box>
       </Grid.Col>
       <Grid.Col span={{ base: 12, lg: 4 }}>
         <Stack gap="md" style={{ position: 'sticky', top: 16 }}>
@@ -114,19 +132,59 @@ function DetailReady({ resume }: { resume: ResumeDetail }) {
                 </Text>{' '}
                 · pipeline completo
               </Text>
-              <Button
-                fullWidth
-                color="terracotta"
-                leftSection={<Download size={16} />}
-                loading={downloadMutation.isPending}
-                disabled={versionNumber === null}
-                onClick={() =>
-                  versionNumber !== null &&
-                  downloadMutation.mutate({ id: resume.id, versionNumber })
-                }
-              >
-                Exportar PDF
-              </Button>
+              <Menu position="bottom" width="target" radius="md" shadow="lg" withinPortal>
+                <Menu.Target>
+                  <Button
+                    fullWidth
+                    color="terracotta"
+                    leftSection={<Download size={16} />}
+                    rightSection={<ChevronDown size={15} />}
+                    loading={exporting}
+                    disabled={versionNumber === null}
+                  >
+                    Exportar PDF
+                  </Button>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Label>Escolha o modelo</Menu.Label>
+                  <Menu.Item
+                    leftSection={<File size={16} />}
+                    onClick={() =>
+                      versionNumber !== null &&
+                      downloadMutation.mutate({ id: resume.id, versionNumber })
+                    }
+                  >
+                    <Text fz={14} fw={600} c="var(--mantine-color-text)">
+                      Modelo padrão (ATS)
+                    </Text>
+                    <Text fz={12} c="dimmed" lh={1.4}>
+                      Sóbrio, preto no branco. Máxima compatibilidade com filtros.
+                    </Text>
+                  </Menu.Item>
+                  <Menu.Item leftSection={<Sparkles size={16} />} onClick={exportVisual}>
+                    <Text fz={14} fw={600} c="var(--mantine-color-text)">
+                      Modelo visual
+                    </Text>
+                    <Text fz={12} c="dimmed" lh={1.4}>
+                      Cópia fiel do card do Sieve, igual ao que você vê na tela.
+                    </Text>
+                  </Menu.Item>
+                  <Menu.Divider />
+                  <Box px="sm" py={8}>
+                    <Group gap={6} align="flex-start" wrap="nowrap">
+                      <Box c="terracotta.6" mt={1} style={{ flexShrink: 0 }}>
+                        <Lightbulb size={13} />
+                      </Box>
+                      <Text fz={11.5} c="dimmed" lh={1.5}>
+                        Modelos limpos costumam passar melhor pelos filtros (ATS) e
+                        cansam menos o recrutador. O visual realça sua identidade —
+                        bom pra candidaturas diretas. Na dúvida, o simples vai mais
+                        longe.
+                      </Text>
+                    </Group>
+                  </Box>
+                </Menu.Dropdown>
+              </Menu>
             </Stack>
           </Paper>
 
