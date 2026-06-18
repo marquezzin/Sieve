@@ -1,50 +1,19 @@
-import { useNavigate } from 'react-router-dom';
 import { Box, Group, Paper, Stack, Text } from '@mantine/core';
-import { Briefcase, ChevronRight } from '@/components/atoms/Icon';
+import { ChevronRight } from '@/components/atoms/Icon';
 import { formatRelative } from '@/lib/formatters';
+import { CompanyAvatar } from '../CompanyAvatar/CompanyAvatar';
 import type { JobPosting } from '../../types';
 
 interface AnalyzedJobItemProps {
   job: JobPosting;
-}
-
-/** Avatar quadrado com as iniciais da empresa (gradiente neutro do protótipo). */
-function CompanyAvatar({ company }: { company: string }) {
-  const initials = company
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-  return (
-    <Box
-      style={{
-        display: 'grid',
-        placeItems: 'center',
-        width: 42,
-        height: 42,
-        borderRadius: 12,
-        flexShrink: 0,
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: 700,
-        background: 'linear-gradient(135deg, #c6bdac, #574f43)',
-      }}
-    >
-      {initials || <Briefcase size={18} />}
-    </Box>
-  );
+  onOpen: () => void;
 }
 
 /**
- * Item da lista "Analisadas" (porte do card do `JobsAnalyzed`). Clicar abre o
- * detalhe da vaga (`/matching/jobs/{id}`) com a análise mais recente. A barra de
- * score do protótipo dependia de um match salvo por vaga (não exposto pela lista)
- * — aqui mostramos as keywords extraídas, que é o sinal que a lista carrega.
+ * Item da lista "Vagas analisadas". Clicar **abre o modal** com a análise completa
+ * (`JobAnalysisModal`) — a página controla qual vaga está aberta.
  */
-export function AnalyzedJobItem({ job }: AnalyzedJobItemProps) {
-  const navigate = useNavigate();
+export function AnalyzedJobItem({ job, onOpen }: AnalyzedJobItemProps) {
   const keywordPreview = job.extracted_keywords.slice(0, 4);
 
   return (
@@ -52,8 +21,16 @@ export function AnalyzedJobItem({ job }: AnalyzedJobItemProps) {
       withBorder
       radius="lg"
       p="md"
+      onClick={onOpen}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
       style={{ cursor: 'pointer' }}
-      onClick={() => navigate(`/matching/jobs/${job.id}`)}
     >
       <Group gap="md" wrap="nowrap" align="center">
         <CompanyAvatar company={job.company} />
@@ -67,7 +44,9 @@ export function AnalyzedJobItem({ job }: AnalyzedJobItemProps) {
           {keywordPreview.length > 0 && (
             <Text fz={12} c="dimmed" truncate mt={2}>
               {keywordPreview.join(' · ')}
-              {job.extracted_keywords.length > keywordPreview.length ? ' …' : ''}
+              {job.extracted_keywords.length > keywordPreview.length
+                ? ' …'
+                : ''}
             </Text>
           )}
         </Stack>

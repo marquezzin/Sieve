@@ -9,7 +9,6 @@ import {
   Paper,
   SimpleGrid,
   Stack,
-  Tabs,
   Text,
   Title,
 } from '@mantine/core';
@@ -24,10 +23,12 @@ import {
 } from '../../components/JobInputForm/JobInputForm';
 import { MatchResult } from '../../components/MatchResult/MatchResult';
 import { AnalyzedJobItem } from '../../components/AnalyzedJobItem/AnalyzedJobItem';
+import { JobAnalysisModal } from '../../components/JobAnalysisModal/JobAnalysisModal';
+import type { JobPosting } from '../../types';
 
 function PageHeader() {
   return (
-    <Box>
+    <Box mb="lg">
       <Text
         fz={11}
         fw={700}
@@ -82,25 +83,89 @@ function AnalyzingCard() {
   );
 }
 
-/** Painel vazio inicial (porte do `EmptyState` do `JobAnalyzer`). */
-function EmptyResultPanel() {
+/** Card de passo numerado (faixa horizontal "como funciona"). */
+function HowItWorksStep({
+  index,
+  title,
+  desc,
+}: {
+  index: number;
+  title: string;
+  desc: string;
+}) {
   return (
-    <Paper withBorder radius="lg" mih={420} style={{ display: 'grid', placeItems: 'center' }}>
-      <Stack align="center" gap="sm" py="xl" px="lg">
-        <IconChip icon={Briefcase} tone="terracotta" size={64} iconSize={28} />
-        <Title order={3} fz={18} fw={700} c="var(--mantine-color-text)">
-          Cole uma vaga para começar
-        </Title>
-        <Text c="dimmed" ta="center" maw={360} fz={14} lh={1.6}>
-          O Sieve compara a vaga com seu currículo e mostra o score de aderência,
-          as skills que batem e o que falta.
+    <Paper withBorder radius="md" p="md" h="100%">
+      <Group gap="xs" align="center" mb={6} wrap="nowrap">
+        <Box
+          style={{
+            display: 'grid',
+            placeItems: 'center',
+            width: 26,
+            height: 26,
+            borderRadius: 999,
+            flexShrink: 0,
+            fontSize: 13,
+            fontWeight: 800,
+            color: '#fff',
+            background:
+              'linear-gradient(135deg, var(--mantine-color-terracotta-5), var(--mantine-color-terracotta-7))',
+            boxShadow: '0 2px 6px -2px var(--mantine-color-terracotta-7)',
+          }}
+        >
+          {index}
+        </Box>
+        <Text fz={14} fw={700} c="var(--mantine-color-text)">
+          {title}
         </Text>
-      </Stack>
+      </Group>
+      <Text fz={13} c="dimmed" lh={1.55}>
+        {desc}
+      </Text>
     </Paper>
   );
 }
 
-function AnalyzeTab() {
+/**
+ * Estado inicial (sem análise): faixa horizontal "como funciona" abaixo do form —
+ * preenche a largura e elimina o vazio que sobrava ao lado do form.
+ */
+function HowItWorksStrip() {
+  return (
+    <Box>
+      <Group gap="xs" align="center" mb="sm">
+        <IconChip icon={Sparkles} tone="terracotta" size={34} iconSize={16} />
+        <Box>
+          <Text fz={14} fw={800} c="var(--mantine-color-text)">
+            Aderência em 3 passos
+          </Text>
+          <Text fz={12} c="dimmed">
+            Análise honesta, sem reescrever seu currículo.
+          </Text>
+        </Box>
+      </Group>
+      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
+        <HowItWorksStep
+          index={1}
+          title="Cole a vaga"
+          desc="Título, empresa e a descrição completa — quanto mais detalhe, melhor o matching."
+        />
+        <HowItWorksStep
+          index={2}
+          title="Escolha o currículo"
+          desc="Comparamos a vaga com a versão mais recente do currículo escolhido."
+        />
+        <HowItWorksStep
+          index={3}
+          title="Veja a aderência"
+          desc="Score, skills que batem e que faltam, e recomendações detalhadas pra mandar bem."
+        />
+      </SimpleGrid>
+    </Box>
+  );
+}
+
+/** Bloco "Analisar vaga": form + resultado da análise recém-rodada. */
+function AnalyzeSection() {
   const resumesQuery = useResumesForSelect();
   const runAnalysis = useRunAnalysis();
 
@@ -133,121 +198,108 @@ function AnalyzeTab() {
     );
   }
 
-  return (
-    <SimpleGrid
-      cols={{ base: 1, lg: 2 }}
-      spacing="lg"
-      style={{ alignItems: 'start' }}
-    >
-      <JobInputForm
-        resumes={resumes}
-        defaultResumeId={defaultResumeId}
-        analyzing={runAnalysis.isPending}
-        onSubmit={handleSubmit}
-      />
+  const form = (
+    <JobInputForm
+      resumes={resumes}
+      defaultResumeId={defaultResumeId}
+      analyzing={runAnalysis.isPending}
+      onSubmit={handleSubmit}
+    />
+  );
 
-      <Box>
-        {runAnalysis.isPending ? (
-          <AnalyzingCard />
-        ) : runAnalysis.isError ? (
-          <Alert color="red" title="Falha na análise">
-            {runAnalysis.error.message}
-          </Alert>
-        ) : result ? (
-          <MatchResult analysis={result.analysis} />
-        ) : (
-          <EmptyResultPanel />
-        )}
-      </Box>
+  // Tem saída (rodando / erro / resultado)? layout 2 colunas (form + saída, ambas
+  // altas, equilibradas). Estado inicial vazio → coluna única centrada com o form
+  // em foco e os "3 passos" numa faixa abaixo — sem o vazio lateral.
+  const output = runAnalysis.isPending ? (
+    <AnalyzingCard />
+  ) : runAnalysis.isError ? (
+    <Alert color="red" title="Falha na análise">
+      {runAnalysis.error.message}
+    </Alert>
+  ) : result ? (
+    <MatchResult analysis={result.analysis} />
+  ) : null;
+
+  if (!output) {
+    return (
+      <Stack gap="lg" maw={760} mx="auto">
+        {form}
+        <HowItWorksStrip />
+      </Stack>
+    );
+  }
+
+  return (
+    <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="lg" style={{ alignItems: 'start' }}>
+      {form}
+      <Box>{output}</Box>
     </SimpleGrid>
   );
 }
 
-function AnalyzedTab() {
+/** Bloco "Vagas analisadas": lista; clicar abre o modal com a análise completa. */
+function AnalyzedSection() {
   const jobsQuery = useJobList();
+  const [openJob, setOpenJob] = useState<JobPosting | null>(null);
 
-  if (jobsQuery.isLoading) {
-    return (
-      <Center mih="40vh">
-        <Loader color="terracotta" />
-      </Center>
-    );
-  }
-
-  if (jobsQuery.isError) {
-    return (
-      <Center mih="40vh" px="md">
-        <Alert color="red" title="Erro ao carregar vagas" maw={520}>
-          {jobsQuery.error.message}
-        </Alert>
-      </Center>
-    );
-  }
-
-  const jobs = jobsQuery.data;
-
-  if (jobs.length === 0) {
-    return (
-      <Paper withBorder radius="lg" p="xl">
-        <Stack align="center" gap="sm" py={40}>
-          <IconChip icon={Briefcase} tone="terracotta" size={64} iconSize={28} />
-          <Title order={3} fz={18} fw={700} c="var(--mantine-color-text)">
-            Nenhuma vaga analisada ainda
-          </Title>
-          <Text c="dimmed" ta="center" maw={360} fz={14} lh={1.6}>
-            Analise uma vaga na aba ao lado e ela aparece aqui.
-          </Text>
-        </Stack>
-      </Paper>
-    );
-  }
+  const jobs = jobsQuery.data ?? [];
 
   return (
-    <Stack gap="sm">
-      {jobs.map((job) => (
-        <AnalyzedJobItem key={job.id} job={job} />
-      ))}
-    </Stack>
+    <Box mt={40}>
+      <Group gap="sm" align="center" mb="md">
+        <Title order={2} fz={18} fw={800} c="var(--mantine-color-text)">
+          Vagas analisadas
+        </Title>
+        {jobs.length > 0 && (
+          <Badge variant="light" color="terracotta" size="sm">
+            {jobs.length}
+          </Badge>
+        )}
+      </Group>
+
+      {jobsQuery.isLoading ? (
+        <Center mih={160}>
+          <Loader color="terracotta" />
+        </Center>
+      ) : jobsQuery.isError ? (
+        <Alert color="red" title="Erro ao carregar vagas">
+          {jobsQuery.error.message}
+        </Alert>
+      ) : jobs.length === 0 ? (
+        <Paper withBorder radius="lg" p="xl">
+          <Stack align="center" gap="sm" py={32}>
+            <IconChip icon={Briefcase} tone="terracotta" size={56} iconSize={24} />
+            <Title order={3} fz={16} fw={700} c="var(--mantine-color-text)">
+              Nenhuma vaga analisada ainda
+            </Title>
+            <Text c="dimmed" ta="center" maw={360} fz={13} lh={1.6}>
+              Analise uma vaga no formulário acima e ela aparece aqui.
+            </Text>
+          </Stack>
+        </Paper>
+      ) : (
+        <Stack gap="sm">
+          {jobs.map((job) => (
+            <AnalyzedJobItem
+              key={job.id}
+              job={job}
+              onOpen={() => setOpenJob(job)}
+            />
+          ))}
+        </Stack>
+      )}
+
+      <JobAnalysisModal job={openJob} onClose={() => setOpenJob(null)} />
+    </Box>
   );
 }
 
 export function JobAnalysisPage() {
-  const [tab, setTab] = useState<string>('new');
-  const jobsQuery = useJobList();
-  const jobCount = jobsQuery.data?.length ?? 0;
-
   return (
     <Box maw={1160} mx="auto" px={{ base: 'sm', lg: 'lg' }} py="md">
-      <Group justify="space-between" align="flex-end" gap="md" mb="lg" wrap="wrap">
-        <PageHeader />
-        <Tabs
-          value={tab}
-          onChange={(v) => setTab(v ?? 'new')}
-          variant="pills"
-          color="terracotta"
-        >
-          <Tabs.List>
-            <Tabs.Tab value="new" leftSection={<Sparkles size={15} />}>
-              Analisar vaga
-            </Tabs.Tab>
-            <Tabs.Tab
-              value="list"
-              leftSection={<Briefcase size={15} />}
-              rightSection={
-                jobCount > 0 ? (
-                  <Badge size="xs" variant="light" color="terracotta" circle>
-                    {jobCount}
-                  </Badge>
-                ) : undefined
-              }
-            >
-              Analisadas
-            </Tabs.Tab>
-          </Tabs.List>
-        </Tabs>
-      </Group>
-
-      {tab === 'new' ? <AnalyzeTab /> : <AnalyzedTab />}
+      <PageHeader />
+      <AnalyzeSection />
+      <AnalyzedSection />
     </Box>
   );
 }

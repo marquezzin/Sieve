@@ -30,7 +30,7 @@ Tudo escopado ao `request.user` (selectors com 404/403). `IsAuthenticated` defau
 
 | Método | Rota | Ação |
 |---|---|---|
-| GET | `/jobs/` | lista vagas do user (sem `embedding`) |
+| GET | `/jobs/` | lista vagas do user (sem `embedding`; com `top_score`) |
 | POST | `/jobs/` | ingere vaga (`title`, `company`, `description`) → `JobPosting` |
 | GET | `/jobs/{id}/` | detalhe da vaga |
 | POST | `/analyze/` | body `{resume_version_id, job_posting_id}`, `?refresh=true` força recálculo → `MatchAnalysis` |
@@ -50,6 +50,11 @@ Tudo escopado ao `request.user` (selectors com 404/403). `IsAuthenticated` defau
 
 - **`score` em [0,1] no backend**, % no frontend — mantém o campo numérico puro
   e deixa a apresentação no cliente.
+- **`top_score` anotado na LISTA** — `list_jobs_for_user` faz
+  `annotate(top_score=Max("match_analyses__score"))` (evita N+1) e o
+  `JobPostingSerializer` expõe `top_score` (float 0–1 ou `null`). Alimenta o widget
+  "Aderência às últimas vagas" do dashboard sem precisar do detalhe por vaga. Em
+  objetos sem a anotação (create/detail) o campo sai `null`.
 - **Cache por par `(resume_version, job_posting)`** — match é caro (LLM); só
   recalcula sob `?refresh=true`.
 - **Keyword "ausente"** = similaridade coseno keyword↔currículo `< ATS_GAP_THRESHOLD`

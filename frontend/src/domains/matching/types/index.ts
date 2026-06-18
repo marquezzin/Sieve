@@ -11,6 +11,8 @@ export interface JobPosting {
   company: string;
   description: string;
   extracted_keywords: string[];
+  /** Maior aderência já calculada (FLOAT 0.0–1.0) ou `null` se nunca analisada. */
+  top_score: number | null;
   created_at: string;
 }
 

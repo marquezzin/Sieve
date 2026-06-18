@@ -2,7 +2,7 @@
 leitura + checagem de dono. Espelha `resumes/selectors.py:get_resume_for_user`.
 """
 
-from django.db.models import QuerySet
+from django.db.models import Max, QuerySet
 
 from core.errors import NotFoundError, PermissionDeniedError
 from matching.models import JobPosting, MatchAnalysis
@@ -24,7 +24,12 @@ def get_job_for_user(*, user, job_id) -> JobPosting:
 
 
 def list_jobs_for_user(*, user) -> QuerySet[JobPosting]:
-    return JobPosting.objects.filter(user=user)
+    """Vagas do usuário (mais recentes primeiro), anotadas com a melhor aderência.
+
+    `top_score` = maior `score` entre as análises da vaga (`None` se nunca
+    analisada). Anotação evita N+1 ao expor a aderência na listagem.
+    """
+    return JobPosting.objects.filter(user=user).annotate(top_score=Max("match_analyses__score"))
 
 
 def get_match_analysis(*, resume_version: ResumeVersion, job_posting: JobPosting) -> MatchAnalysis | None:

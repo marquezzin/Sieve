@@ -16,6 +16,7 @@ import { IconChip } from '@/components/atoms/IconChip';
 import { formatRelative } from '@/lib/formatters';
 import { useJob } from '../../hooks/useJob';
 import { MatchResult } from '../../components/MatchResult/MatchResult';
+import { CompanyAvatar } from '../../components/CompanyAvatar/CompanyAvatar';
 import type { JobPostingDetail } from '../../types';
 
 function Breadcrumb({ title }: { title: string }) {
@@ -32,35 +33,6 @@ function Breadcrumb({ title }: { title: string }) {
         {title}
       </Text>
     </Group>
-  );
-}
-
-/** Avatar quadrado com as iniciais da empresa (gradiente neutro do protótipo). */
-function CompanyAvatar({ company }: { company: string }) {
-  const initials = company
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-  return (
-    <Box
-      style={{
-        display: 'grid',
-        placeItems: 'center',
-        width: 52,
-        height: 52,
-        borderRadius: 14,
-        flexShrink: 0,
-        color: '#fff',
-        fontSize: 17,
-        fontWeight: 700,
-        background: 'linear-gradient(135deg, #c6bdac, #574f43)',
-      }}
-    >
-      {initials || <Briefcase size={22} />}
-    </Box>
   );
 }
 
@@ -87,7 +59,7 @@ function DetailHeader({ job }: { job: JobPostingDetail }) {
         {job.title}
       </Title>
       <Group gap="sm" mt="sm" wrap="nowrap" align="center">
-        <CompanyAvatar company={job.company} />
+        <CompanyAvatar company={job.company} size={52} />
         <Text fz={18} fw={700} c="var(--mantine-color-text)" truncate>
           {job.company}
         </Text>

@@ -4,7 +4,14 @@ from matching.models import JobPosting, MatchAnalysis
 
 
 class JobPostingSerializer(serializers.ModelSerializer):
-    """Item de leitura de vaga. NUNCA expõe o embedding (índice interno)."""
+    """Item de leitura de vaga. NUNCA expõe o embedding (índice interno).
+
+    `top_score` (float 0.0–1.0 ou `null`) é a maior aderência já calculada para a
+    vaga — vem da anotação de `list_jobs_for_user`. Em objetos sem a anotação
+    (create/detail) sai `null`.
+    """
+
+    top_score = serializers.SerializerMethodField()
 
     class Meta:
         model = JobPosting
@@ -14,9 +21,14 @@ class JobPostingSerializer(serializers.ModelSerializer):
             "company",
             "description",
             "extracted_keywords",
+            "top_score",
             "created_at",
         )
         read_only_fields = fields
+
+    def get_top_score(self, obj: JobPosting) -> float | None:
+        raw = getattr(obj, "top_score", None)
+        return float(raw) if raw is not None else None
 
 
 class JobPostingCreateSerializer(serializers.Serializer):
