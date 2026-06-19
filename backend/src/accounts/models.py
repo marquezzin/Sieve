@@ -24,5 +24,16 @@ class CandidateProfile(BaseModel):
     linkedin_url = models.URLField(blank=True, default="")
     github_url = models.URLField(blank=True, default="")
 
+    PHOTO_STATUS_CHOICES = [
+        ("idle", "idle"),
+        ("generating", "generating"),
+        ("ready", "ready"),
+        ("failed", "failed"),
+    ]
+
+    base_photo = models.ImageField(upload_to="base-photos/", blank=True, null=True)
+    professional_photo = models.ImageField(upload_to="professional-photos/", blank=True, null=True)
+    photo_status = models.CharField(max_length=20, choices=PHOTO_STATUS_CHOICES, default="idle")
+
     def __str__(self) -> str:
         return f"Profile<{self.user}>"

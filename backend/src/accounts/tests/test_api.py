@@ -180,6 +180,9 @@ def test_get_me_returns_profile(auth_client):
         "phone",
         "linkedin_url",
         "github_url",
+        "photo_status",
+        "base_photo_url",
+        "professional_photo_url",
         "created_at",
         "updated_at",
     }

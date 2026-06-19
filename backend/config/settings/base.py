@@ -128,6 +128,14 @@ EMBEDDINGS_API_KEY = config("EMBEDDINGS_API_KEY", default="")
 EMBEDDINGS_MODEL = config("EMBEDDINGS_MODEL", default="voyage-3")
 EMBEDDINGS_DIM = config("EMBEDDINGS_DIM", default=1024, cast=int)
 
+# ─── Headshot (foto profissional via API externa — Render) ───────────────────
+HEADSHOT_PROVIDER = config("HEADSHOT_PROVIDER", default="render")
+HEADSHOT_API_URL = config("HEADSHOT_API_URL", default="https://curriculo-headshot-api.onrender.com")
+HEADSHOT_API_KEY = config("HEADSHOT_API_KEY", default="")
+HEADSHOT_TIMEOUT = config("HEADSHOT_TIMEOUT", default=240.0, cast=float)
+HEADSHOT_WAKE_TIMEOUT = config("HEADSHOT_WAKE_TIMEOUT", default=60.0, cast=float)
+HEADSHOT_MAX_RETRIES = config("HEADSHOT_MAX_RETRIES", default=1, cast=int)
+
 # ─── Knowledge base ──────────────────────────────────────────────────────────
 # Diretório raiz dos arquivos .md ingeridos pelo app `knowledge`. BASE_DIR é
 # backend/, subindo um nível chega na raiz do repo onde mora `knowledge_base/`.
@@ -236,7 +244,7 @@ USE_TZ = True
 # ─── Static / media ──────────────────────────────────────────────────────────
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-MEDIA_URL = "media/"
+MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # ─── Observabilidade (Sentry + logging) ──────────────────────────────────────

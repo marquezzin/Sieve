@@ -77,6 +77,10 @@ with contextlib.suppress(ImportError):
 # registradas, senão o toolbar quebra com NoReverseMatch ('djdt') ao tentar
 # se injetar em qualquer resposta vinda de INTERNAL_IPS.
 if settings.DEBUG:
+    from django.conf.urls.static import static
+
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
     with contextlib.suppress(ImportError):
         import debug_toolbar  # noqa: F401
 

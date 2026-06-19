@@ -110,6 +110,7 @@ class ComputeMatch:
 
     # ─── score ────────────────────────────────────────────────────────────────
 
+    # Busca similaridade semantica/vetorial
     def _compute_score(self, resume_version: ResumeVersion, job_posting: JobPosting) -> float:
         resume_vec = list(resume_version.embedding) if resume_version.embedding is not None else []
         job_vec = list(job_posting.embedding) if job_posting.embedding is not None else []
