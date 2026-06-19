@@ -36,4 +36,5 @@ export {
   Link,
   GripVertical,
   Trash,
+  Maximize,
 } from './Icon';

@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  ActionIcon,
   Alert,
   Box,
   Button,
@@ -13,6 +14,7 @@ import {
   Group,
   Image,
   Loader,
+  Modal,
   Paper,
   Progress,
   SimpleGrid,
@@ -23,6 +25,7 @@ import { notifications } from '@mantine/notifications';
 import {
   Alert as AlertIcon,
   Download,
+  Maximize,
   Refresh,
   Sparkles,
   Upload,
@@ -171,25 +174,61 @@ function PhotoSquare({
   src,
   alt,
   accent,
+  onZoom,
 }: {
   src: string;
   alt: string;
   accent?: boolean;
+  onZoom?: () => void;
 }) {
+  const [hover, setHover] = useState(false);
+
   return (
-    <Image
-      src={src}
-      alt={alt}
-      radius="md"
-      style={{
-        aspectRatio: '1 / 1',
-        objectFit: 'cover',
-        width: '100%',
-        border: accent
-          ? '2px solid var(--mantine-color-terracotta-3)'
-          : '1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4))',
-      }}
-    />
+    <Box
+      pos="relative"
+      w="100%"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onClick={onZoom}
+      style={{ cursor: onZoom ? 'zoom-in' : undefined }}
+    >
+      <Image
+        src={src}
+        alt={alt}
+        radius="md"
+        style={{
+          aspectRatio: '1 / 1',
+          objectFit: 'cover',
+          width: '100%',
+          border: accent
+            ? '2px solid var(--mantine-color-terracotta-3)'
+            : '1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4))',
+        }}
+      />
+      {onZoom && (
+        <ActionIcon
+          variant="white"
+          color="dark"
+          radius="xl"
+          size="lg"
+          aria-label="Ampliar foto"
+          onClick={(e) => {
+            e.stopPropagation();
+            onZoom();
+          }}
+          style={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            opacity: hover ? 1 : 0,
+            transition: 'opacity 150ms',
+            boxShadow: '0 1px 6px rgba(0, 0, 0, 0.25)',
+          }}
+        >
+          <Maximize size={16} />
+        </ActionIcon>
+      )}
+    </Box>
   );
 }
 
@@ -232,6 +271,7 @@ export function PhotoStudio() {
   const uploadMutation = useUploadBasePhoto();
   const generateMutation = useGeneratePhoto();
   const replaceInputRef = useRef<HTMLInputElement>(null);
+  const [zoom, setZoom] = useState<{ src: string; alt: string } | null>(null);
 
   const state: PhotoState | undefined = statusQuery.data;
   const status = state?.photo_status;
@@ -254,31 +294,28 @@ export function PhotoStudio() {
     link.remove();
   };
 
-  // Estado inicial sendo carregado.
+  let content: ReactNode;
+
   if (statusQuery.isLoading) {
-    return (
-      <CardShell>
-        <Center py={56}>
-          <Loader color="terracotta" />
-        </Center>
-      </CardShell>
+    // Estado inicial sendo carregado.
+    content = (
+      <Center py={56}>
+        <Loader color="terracotta" />
+      </Center>
     );
-  }
-
-  // Fase generating — sem botões, polling em andamento.
-  if (status === 'generating') {
-    return (
-      <CardShell>
-        <GeneratingPhase />
-      </CardShell>
-    );
-  }
-
-  // Fase result — antes/depois + ações.
-  if (status === 'ready' && state?.professional_photo_url && state.base_photo_url) {
+  } else if (status === 'generating') {
+    // Fase generating — sem botões, polling em andamento.
+    content = <GeneratingPhase />;
+  } else if (
+    status === 'ready' &&
+    state?.professional_photo_url &&
+    state.base_photo_url
+  ) {
+    // Fase result — antes/depois + ações.
     const professionalUrl = state.professional_photo_url;
-    return (
-      <CardShell>
+    const baseUrl = state.base_photo_url;
+    content = (
+      <>
         <SimpleGrid cols={2} spacing="sm">
           <Stack gap={8}>
             <Text
@@ -291,7 +328,11 @@ export function PhotoStudio() {
             >
               Antes
             </Text>
-            <PhotoSquare src={state.base_photo_url} alt="Selfie original" />
+            <PhotoSquare
+              src={baseUrl}
+              alt="Selfie original"
+              onZoom={() => setZoom({ src: baseUrl, alt: 'Selfie original' })}
+            />
           </Stack>
           <Stack gap={8}>
             <Text
@@ -304,10 +345,25 @@ export function PhotoStudio() {
             >
               Depois
             </Text>
-            <PhotoSquare src={professionalUrl} alt="Foto profissional" accent />
+            <PhotoSquare
+              src={professionalUrl}
+              alt="Foto profissional"
+              accent
+              onZoom={() =>
+                setZoom({ src: professionalUrl, alt: 'Foto profissional' })
+              }
+            />
           </Stack>
         </SimpleGrid>
         <Group justify="center" gap="sm" mt="lg">
+          <Button
+            variant="default"
+            leftSection={<Upload size={16} />}
+            loading={uploadMutation.isPending}
+            onClick={() => replaceInputRef.current?.click()}
+          >
+            Trocar foto
+          </Button>
           <Button
             variant="default"
             leftSection={<Refresh size={16} />}
@@ -325,14 +381,13 @@ export function PhotoStudio() {
             Baixar
           </Button>
         </Group>
-      </CardShell>
+      </>
     );
-  }
-
-  // Fase preview — tem base_photo_url e status idle/failed.
-  if (state?.base_photo_url) {
-    return (
-      <CardShell>
+  } else if (state?.base_photo_url) {
+    // Fase preview — tem base_photo_url e status idle/failed.
+    const baseUrl = state.base_photo_url;
+    content = (
+      <>
         {status === 'failed' && (
           <Alert
             color="red"
@@ -346,7 +401,11 @@ export function PhotoStudio() {
         )}
         <Center>
           <Box maw={240} w="100%">
-            <PhotoSquare src={state.base_photo_url} alt="Selfie enviada" />
+            <PhotoSquare
+              src={baseUrl}
+              alt="Selfie enviada"
+              onZoom={() => setZoom({ src: baseUrl, alt: 'Selfie enviada' })}
+            />
           </Box>
         </Center>
         <Group justify="center" gap="sm" mt="lg">
@@ -367,25 +426,48 @@ export function PhotoStudio() {
             Gerar foto profissional
           </Button>
         </Group>
-        <input
-          ref={replaceInputRef}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            e.target.value = '';
-            if (file) handleSelect(file);
-          }}
-        />
-      </CardShell>
+      </>
+    );
+  } else {
+    // Fase upload — sem base_photo_url.
+    content = (
+      <UploadDropzone onSelect={handleSelect} loading={uploadMutation.isPending} />
     );
   }
 
-  // Fase upload — sem base_photo_url.
   return (
     <CardShell>
-      <UploadDropzone onSelect={handleSelect} loading={uploadMutation.isPending} />
+      {content}
+      {/* Input único de "Trocar foto", compartilhado por preview e result. */}
+      <input
+        ref={replaceInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = '';
+          if (file) handleSelect(file);
+        }}
+      />
+      <Modal
+        opened={zoom !== null}
+        onClose={() => setZoom(null)}
+        size="lg"
+        centered
+        padding="md"
+        title={zoom?.alt}
+      >
+        {zoom && (
+          <Image
+            src={zoom.src}
+            alt={zoom.alt}
+            radius="md"
+            fit="contain"
+            style={{ maxHeight: '75vh', width: '100%' }}
+          />
+        )}
+      </Modal>
     </CardShell>
   );
 }

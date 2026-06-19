@@ -29,6 +29,18 @@ class PhotoStatusSerializer(serializers.Serializer):
         return obj.professional_photo.url if obj.professional_photo else None
 
 
+def _normalize_url(value: str) -> str:
+    """Aceita o domínio puro (ex.: `linkedin.com/in/x`) e prefixa `https://`.
+
+    O usuário digita o link do jeito natural, sem scheme; o `URLField` do DRF
+    rejeitaria isso. Normalizamos pra armazenar um URL válido. Vazio segue vazio.
+    """
+    value = (value or "").strip()
+    if value and "://" not in value:
+        value = f"https://{value}"
+    return value
+
+
 class CandidateProfileSerializer(serializers.ModelSerializer):
     # Dados do User só pra exibição (avatar/cabeçalho do perfil). `user` em si
     # nunca é editável — quem identifica é o `request.user`.
@@ -36,6 +48,13 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
     base_photo_url = serializers.SerializerMethodField()
     professional_photo_url = serializers.SerializerMethodField()
+    # CharField (não URLField) pra aceitar domínio sem scheme; normalizado abaixo.
+    linkedin_url = serializers.CharField(
+        required=False, allow_blank=True, max_length=200
+    )
+    github_url = serializers.CharField(
+        required=False, allow_blank=True, max_length=200
+    )
 
     class Meta:
         model = CandidateProfile
@@ -67,6 +86,12 @@ class CandidateProfileSerializer(serializers.ModelSerializer):
 
     def get_full_name(self, obj) -> str:
         return obj.user.get_full_name() or obj.user.get_username()
+
+    def validate_linkedin_url(self, value: str) -> str:
+        return _normalize_url(value)
+
+    def validate_github_url(self, value: str) -> str:
+        return _normalize_url(value)
 
     def get_base_photo_url(self, obj):
         return obj.base_photo.url if obj.base_photo else None
