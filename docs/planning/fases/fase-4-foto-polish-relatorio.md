@@ -1,297 +1,245 @@
-# Fase 4 — Foto profissional + polimento UI + relatório acadêmico + apresentação
+# Fase 4 — Foto profissional (API externa) + polimento de UI
 
-**Status:** 🔲 Pendente
+**Status:** ✅ Done
+**Entregue em:** 2026-06-19
 **Pré-requisitos:** Fases 1, 2, 3 ✅ (todo o produto core funcional)
+
+> **O que ficou pronto.** Foto profissional via API externa (integration
+> `headshot/` com wake-up de cold-start, task Celery, endpoints upload/generate/
+> status, storage padrão do Django) + PhotoStudio no frontend (upload → preview →
+> generating sem expirar → antes/depois) + polimento de UI cross-domain (helper
+> `lib/notifications.ts`, átomo `EmptyState`, `onError` faltante no matching,
+> padronização de notificações). Gates: `make test-fast` **257 passed, 1
+> skipped**; frontend `typecheck` + `lint` limpos. **Pendente (manual, exige a
+> stack + worker rodando):** smoke ponta-a-ponta real contra o Render no
+> `/profile`. A auditoria de UX achou os 5 domains já majoritariamente em
+> conformidade com os 5 "must" — só lacunas reais foram tocadas.
+
+> **Mudança de escopo (2026-06-19).** Esta fase foi reduzida e redirecionada a
+> pedido do usuário:
+> - A foto profissional **não é mais gerada do zero** (OpenAI gpt-image-1 /
+>   Replicate). Passa a consumir uma **API externa dedicada** já pronta
+>   (`curriculo-headshot-api`, hospedada no Render) — ver [`../../../api_foto.md`](../../../api_foto.md).
+> - **MinIO removido do escopo.** A foto base e a gerada são salvas com o
+>   **storage padrão do Django** (filesystem / `MEDIA_ROOT`), servidas via
+>   `/media/`. Sem bucket, sem signed URL.
+> - **Relatório acadêmico e apresentação saíram do escopo** desta fase (movidos
+>   para "NÃO faz parte"). Entrega = **foto profissional + polimento de UI**.
 
 ## Contexto
 
 As 3 fases anteriores entregaram o produto. Esta fase entrega:
-- O **extra** previsto no PDF original (foto profissional gerada por IA — primeira coisa na lista de corte se atrasar).
-- **Polimento** da UI cross-domain — loading states, empty states, error messages, animações suaves, mensagens em pt-BR consistentes.
-- **Entregáveis acadêmicos** — relatório técnico cobrindo problema, arquitetura multi-agente, escolha de modelos, métricas, limitações, trabalhos futuros + roteiro de demo + slides.
+- O **extra** previsto no PDF original (foto profissional), agora via integração
+  com uma API externa de headshot.
+- **Polimento** da UI cross-domain — loading states, empty states, error
+  messages, notificações consistentes em pt-BR.
 
-É a fase onde o projeto deixa de ser código funcional e vira **projeto demonstrável e defensável**. Sem ela, o trabalho técnico fica desperdiçado na apresentação.
+## A API externa de headshot
+
+Documentação completa em [`api_foto.md`](../../../api_foto.md). Resumo do contrato:
+
+- Base URL: `https://curriculo-headshot-api.onrender.com`
+- `GET /health` → `{"status":"ok"}` (sem auth).
+- `POST /generate-headshot` — header `x-api-key`, body `multipart/form-data`
+  campo `photo` (até 10MB). Sucesso `200`:
+  `{ "image": { "mimeType": "image/png", "data": "<base64>" } }`.
+- Erros: `400` (sem photo / não-imagem / >10MB), `401` (x-api-key), `502` (falha
+  na geração).
+
+**Premissa crítica — cold-start do Render.** O tier free "dorme" após
+inatividade; a primeira chamada pode levar 30-50s. O requisito do usuário é que
+a experiência **fique carregando até realmente devolver**, sem degradar. Solução
+implementada:
+- A geração roda **server-side numa task Celery** (não bloqueia o request HTTP).
+- O client **acorda o servidor** via `GET /health` (timeout longo, com backoff)
+  antes do `POST /generate-headshot`.
+- O frontend faz **polling do status** enquanto `photo_status === 'generating'`
+  e **nunca expira** — o estado "Gerando…" fica visível o tempo inteiro.
 
 ## Outcome esperado
 
 Ao fim da fase:
 
-1. Usuário em `/profile` faz upload de uma foto base (selfie, qualquer formato JPG/PNG até 5MB).
-2. Sistema redimensiona pra 1024x1024, envia pra API de geração de imagem com prompt "professional headshot, business suit, neutral background, LinkedIn style".
-3. Foto gerada salva no MinIO, retornada via URL assinada (TTL 1h).
-4. Frontend mostra antes/depois lado-a-lado.
-5. **UX cross-domain** revisado: spinners em toda chamada async, mensagens de erro claras em pt-BR, empty states em listas vazias, skeletons em loading inicial, notificações de sucesso/erro consistentes via Mantine `notifications`.
-6. **Documentação acadêmica** completa em `docs/relatorio-academico.md` + `docs/apresentacao/`.
+1. Usuário em `/profile` faz upload de uma foto base (selfie JPG/PNG até 5MB).
+2. Clica em "Gerar foto profissional" → dispara a task Celery.
+3. O backend acorda a API externa (se dormindo) e gera o headshot; a foto é
+   salva com o storage padrão do Django e servida via `/media/`.
+4. Frontend mostra **antes/depois** lado-a-lado.
+5. **UX cross-domain** revisado: skeletons no loading inicial, empty states com
+   CTA em listas vazias, notificações de sucesso/erro consistentes via Mantine
+   `notifications`, botões de mutation com `loading`.
 
 ## Escopo
 
 ### Faz parte
 
-- Integration nova `backend/src/integrations/image/` com cliente pra OpenAI gpt-image-1 (default) ou Replicate (alternativa).
+- Integration nova `backend/src/integrations/headshot/` — client httpx para a API
+  externa, com wake-up via `/health`, retry em 5xx/rede, provider `fake` offline
+  pra testes.
 - Estender `backend/src/accounts/`:
-  - Campo `professional_photo` (FileField com storage MinIO) e `base_photo` (FileField) em `CandidateProfile`.
-  - Use case `accounts.use_cases.generate_professional_photo.GenerateProfessionalPhoto`.
-  - Task Celery `accounts.tasks.generate_professional_photo_task` — async porque imagem leva ~15-30s.
-  - Endpoint `POST /api/v1/accounts/me/photo/` (upload base) + `POST /api/v1/accounts/me/photo/generate/` (dispara task, retorna task_id) + `GET /api/v1/accounts/me/photo/status/` (polling).
-- Setup MinIO bucket `sieve-artifacts` (já em `.env.example` da Fase 0) — criar via `integrations/storage/` se ainda não estiver inicializado em runtime.
+  - Campos `base_photo` (ImageField), `professional_photo` (ImageField) e
+    `photo_status` (`idle|generating|ready|failed`) em `CandidateProfile`.
+  - Use cases `accounts.use_cases.upload_base_photo.UploadBasePhoto` e
+    `accounts.use_cases.generate_professional_photo.GenerateProfessionalPhoto`.
+  - Task Celery `accounts.tasks.generate_professional_photo_task` (async — a
+    chamada externa + cold-start pode levar minutos).
+  - Endpoints `POST /api/v1/accounts/me/photo/` (upload base) +
+    `POST /api/v1/accounts/me/photo/generate/` (dispara task, 202) +
+    `GET /api/v1/accounts/me/photo/status/` (polling).
+- Storage: **default do Django** (`MEDIA_ROOT` / filesystem). `MEDIA_URL=/media/`
+  servido em DEBUG via `static(...)`; `/media` adicionado ao proxy do Vite.
 - Frontend domain `frontend/src/domains/profile/`:
-  - `ProfilePage` com upload + preview side-by-side + status (polling).
+  - `PhotoStudio` (substitui o placeholder): upload (drag-and-drop) → preview →
+    generating → result (antes/depois) → error, derivado do estado real.
+  - Hooks `usePhotoStatus` (polling), `useUploadBasePhoto`, `useGeneratePhoto`.
 - **Polimento UI cross-domain**:
-  - Auditoria de toda página (chat, resume, matching, applications, profile).
-  - Adicionar Mantine `LoadingOverlay` em chamadas async demoradas.
-  - Adicionar `Skeleton` em listas em loading inicial.
-  - Adicionar empty states com CTA (ex: "Nenhum currículo ainda. Inicie uma conversa!").
-  - Padronizar notificações de erro/sucesso via `notifications.show()`.
-  - Revisar mensagens em pt-BR (sem chamada hardcoded em inglês).
-- **README atualizado** com screenshots de cada feature principal (criar pasta `docs/screenshots/` se necessário).
-- **Relatório acadêmico** em `docs/relatorio-academico.md` (~10-15 páginas A4 markdown), cobrindo:
-  1. Problema e motivação
-  2. Stack e justificativa
-  3. Arquitetura multi-agente (referenciar ADR 0002)
-  4. Knowledge base como insumo de treinamento (referenciar ADR 0003 + conceitos-fundamentais)
-  5. Embeddings e retrieval semântico
-  6. Pipeline Celery (writer → reviewer → judge)
-  7. Matching ATS e guardrails contra fabricação
-  8. Métricas: tokens consumidos, cache hit rate, latência por fase, scores médios da rubrica em N runs
-  9. Limitações conhecidas
-  10. Trabalhos futuros
-- **Apresentação** em `docs/apresentacao/`:
-  - `roteiro-demo.md` — sequência de cliques pra demo de 5min cobrindo: login → chat → geração → preview/score → PDF → match → otimização → kanban → foto.
-  - `slides.md` (ou link Google Slides + checked-in PDF) — 15-20 slides.
+  - Helper `frontend/src/lib/notifications.ts` (`notifySuccess/notifyError/notifyInfo`).
+  - Átomo `EmptyState` reutilizável (porte do protótipo).
+  - Auditoria de chat, resume, matching, applications, profile: skeletons em
+    loading inicial, empty states com CTA, erros/sucessos via notifications,
+    botões de mutation com `loading`.
 
 ### NÃO faz parte
 
-- Tudo que sobrou pra "trabalhos futuros" no relatório (vai documentado, não implementado):
-  - Streaming SSE token-a-token
-  - Autocrítica iterativa do reviewer (loop com judge até score > X)
-  - Múltiplos templates de PDF customizáveis
-  - LinkedIn integration (importar perfil)
-  - Sugestão automática de vagas
-  - Multi-language (en-US além de pt-BR)
-  - SSO
+- **Geração de imagem do zero** (OpenAI gpt-image-1 / Replicate) — substituída
+  pela API externa.
+- **MinIO / signed URLs** — storage padrão do Django.
+- **Relatório acadêmico** (`docs/relatorio-academico.md`) e **apresentação**
+  (`docs/apresentacao/`, slides, roteiro de demo, screenshots) — fora do escopo
+  desta entrega.
+- Trabalhos futuros documentados (não implementados): streaming SSE, autocrítica
+  iterativa do reviewer, múltiplos templates de PDF, LinkedIn integration,
+  sugestão automática de vagas, multi-language, SSO.
 
-## Decisões a tomar (com defaults sugeridos)
+## Decisões tomadas
 
-| Decisão | Default | Trade-off |
+| Decisão | Escolha | Observação |
 |---|---|---|
-| Provider de imagem | OpenAI gpt-image-1 | Acesso mais simples (1 API key); Replicate tem mais variedade mas mais setup |
-| Formato aceito de foto base | JPG/PNG, max 5MB | Validar via DRF serializer + Pillow |
-| Redimensionamento | 1024x1024, center crop | Standard pra APIs de imagem |
-| Storage MinIO | Bucket `sieve-artifacts`, subpath `professional-photos/{user_id}/{photo_id}.png` | Mantém isolation por user |
-| URL assinada | TTL 1h | Suficiente pra usuário ver/baixar |
-| Polling de status | TanStack `refetchInterval: 3000` enquanto status=`generating` | Imagem demora 15-30s |
-| Política de retentativa | 1 retry em caso de erro da API; depois desiste e mostra erro | Imagem custa $; não vale martelar |
-| Slides format | Markdown convertido pra PDF via reveal-md ou similar | Versionável em git |
-| Relatório length | ~10-15 páginas A4 — markdown convertido pra PDF via pandoc na entrega | Padrão acadêmico |
+| Geração da foto | **API externa** `curriculo-headshot-api` (Render) | Pronta; preserva identidade; terno + fundo neutro + estúdio. |
+| Cold-start do Render | Wake via `GET /health` no client + task Celery + polling sem expiração no front | "Fica carregando até devolver" sem travar o request HTTP. |
+| Storage | **Default do Django** (filesystem `MEDIA_ROOT`) | Sem MinIO. `MEDIA_URL=/media/`, servido em DEBUG, proxiado pelo Vite. |
+| Formato/tamanho da foto base | JPG/PNG/WEBP, max 5MB | Validado no use case + no client (UX imediata). |
+| Redimensionamento | **Não** redimensiona no backend | A API externa já devolve 1024×1024. |
+| Polling de status | TanStack `refetchInterval: 2500` enquanto `generating` | Espelha `useResume` da Fase 2. |
+| Retry | 1 retry em 5xx/rede no client; depois marca `failed` | Imagem custa $; não martelar. |
+| Provider em teste | `fake` (PNG mínimo, offline) via `os.environ` no `test.py` + DI nos testes | Nunca bate na API real. |
 
-## Arquivos a criar / modificar
+## Arquivos criados / modificados
 
 ### Backend
 
 ```
-backend/src/integrations/image/
+backend/src/integrations/headshot/
 ├── __init__.py
-├── base.py                       # ImageGenerator ABC + ImageGenError
-├── openai_client.py              # OpenAIImageClient.generate(base_image_bytes, prompt) -> bytes
-├── factory.py                    # get_image_generator() por settings
-├── CLAUDE.md, AGENTS.md
+├── base.py                         # HeadshotClient ABC + HeadshotError
+├── render_client.py                # RenderHeadshotClient (wake /health + POST + retry)
+├── fake_client.py                  # FakeHeadshotClient + MINIMAL_PNG_BYTES
+├── factory.py                      # get_headshot_client() por HEADSHOT_* (decouple)
+├── CLAUDE.md
 └── tests/
-    └── test_openai_client.py     # mock httpx
+    ├── __init__.py
+    ├── conftest.py                 # no-op do autouse _clear_cache (igual embeddings)
+    └── test_render_client.py       # httpx.MockTransport — wake/generate/401/5xx/parse
 
 backend/src/accounts/
-├── models.py
-│   # Adicionar: base_photo = FileField, professional_photo = FileField, photo_status = CharField (idle|generating|ready|failed)
-├── migrations/000X_add_photo_fields.py
-├── use_cases/
-│   ├── __init__.py
-│   ├── upload_base_photo.py      # valida + redimensiona via Pillow + storage MinIO
-│   └── generate_professional_photo.py  # chama image API + salva no MinIO
-├── tasks.py                      # generate_professional_photo_task
-├── api/views.py                  # adicionar PhotoUploadView, PhotoGenerateView, PhotoStatusView
+├── models.py                       # + base_photo, professional_photo, photo_status
+├── migrations/0003_candidateprofile_base_photo_and_more.py
+├── use_cases/upload_base_photo.py
+├── use_cases/generate_professional_photo.py
+├── tasks.py                        # generate_professional_photo_task (soft_time_limit=480)
+├── api/serializers.py              # PhotoStatusSerializer + campos no CandidateProfileSerializer
+├── api/views.py                    # PhotoUploadView, PhotoGenerateView, PhotoStatusView
+├── api/urls.py                     # me/photo/, me/photo/generate/, me/photo/status/
 └── tests/
     ├── test_upload_base_photo.py
-    └── test_generate_professional_photo.py
+    ├── test_generate_professional_photo.py
+    └── test_photo_api.py
 
-backend/src/integrations/storage/
-# Já existe — só usar. Se signed URL não estiver implementado, adicionar método get_signed_url(key, ttl)
-
-backend/pyproject.toml             # +Pillow>=11,<12
-backend/config/settings/base.py    # +IMAGE_PROVIDER, IMAGE_API_KEY, IMAGE_MODEL
-backend/.env.example               # documentar IMAGE_*
+backend/config/settings/base.py     # + HEADSHOT_*; MEDIA_URL "media/" → "/media/"
+backend/config/settings/test.py     # os.environ HEADSHOT_PROVIDER=fake; MEDIA_ROOT tmpdir
+backend/config/urls.py              # static(MEDIA_URL, ...) em DEBUG
+backend/pyproject.toml              # + pillow>=11,<12 (já transitivo do weasyprint)
+.env / .env.example                 # bloco HEADSHOT_*
 ```
 
 ### Frontend
 
 ```
 frontend/src/domains/profile/
-├── CLAUDE.md, index.ts
-├── api/
-│   ├── client.ts
-│   └── photo.ts                  # uploadBase, generatePhoto, getStatus
-├── hooks/
-│   ├── useProfile.ts             # GET /me/
-│   ├── useUploadBasePhoto.ts
-│   ├── useGeneratePhoto.ts       # dispara + polling
-├── components/
-│   ├── molecules/
-│   │   ├── PhotoUploader/        # drag-and-drop
-│   │   ├── PhotoPreview/         # antes/depois side-by-side
-│   │   └── ProfileForm/          # PATCH /me/
-├── pages/
-│   └── ProfilePage/
-└── types/
+├── api/photo.ts                    # uploadBasePhoto, generatePhoto, getPhotoStatus
+├── hooks/usePhotoStatus.ts         # refetchInterval enquanto generating
+├── hooks/useUploadBasePhoto.ts
+├── hooks/useGeneratePhoto.ts
+├── components/PhotoStudio/PhotoStudio.tsx   # substitui PhotoStudioPlaceholder
+├── types/index.ts                  # + PhotoState, PhotoStatus, isGeneratingPhoto
+├── hooks/queryKeys.ts              # + PROFILE_PHOTO_KEY
+└── pages/ProfilePage/ProfilePage.tsx
 
-frontend/src/router.tsx           # +/profile
-
-# Polimento — passar em todos os domains existentes:
-frontend/src/domains/chat/        # auditar empty states, skeletons, notifications
-frontend/src/domains/resume/      # idem
-frontend/src/domains/matching/    # idem
-frontend/src/domains/applications/ # idem
-frontend/src/lib/notifications.ts # helper centralizado wrap em mantine notifications (success/error/info)
+frontend/vite.config.ts             # + proxy /media
+frontend/src/lib/notifications.ts   # notifySuccess/notifyError/notifyInfo (polimento)
+frontend/src/components/molecules/EmptyState/  # átomo de empty state (polimento)
+frontend/src/domains/{chat,resume,matching,applications}/  # auditoria de UX (polimento)
 ```
-
-### Documentação
-
-```
-docs/
-├── relatorio-academico.md        # principal, ~10-15 páginas
-├── apresentacao/
-│   ├── roteiro-demo.md           # passo-a-passo de 5min
-│   ├── slides.md                 # source dos slides
-│   └── slides.pdf                # output renderizado
-├── screenshots/                  # imagens pra README e relatório
-│   ├── chat.png
-│   ├── resume.png
-│   ├── score.png
-│   ├── match.png
-│   ├── kanban.png
-│   └── photo.png
-└── README.md (raiz)              # atualizar com screenshots + link pro relatório
-```
-
-## Reuso (não criar — usar)
-
-| Componente | Onde | Como usar |
-|---|---|---|
-| `CandidateProfile` | `accounts/models.py` (Fase 1) | Adicionar fields |
-| `integrations/storage/` | `backend/src/integrations/storage/` | Já existe pra MinIO; possivelmente adicionar `get_signed_url` |
-| `KnowledgeLoader` | — | Não aplicável nesta fase (sem agente novo) |
-| Mantine `notifications`, `LoadingOverlay`, `Skeleton`, `Empty` (custom) | `@mantine/notifications`, `@mantine/core` | Padronizar em `frontend/src/lib/notifications.ts` |
-| TanStack Query polling | TanStack v5 | `useGeneratePhoto` segue mesmo padrão de `useResume` (Fase 2) e `useOptimize` (Fase 3) |
-| `apiClient` axios | `domains/auth/api/client.ts` | Upload com `Content-Type: multipart/form-data` |
 
 ## Critérios de aceite
 
 ### Backend — automatizáveis
 
-- [ ] `accounts.tests.test_upload_base_photo.test_validates_size` — foto > 5MB retorna erro.
-- [ ] `accounts.tests.test_upload_base_photo.test_validates_format` — formato não-imagem retorna erro.
-- [ ] `accounts.tests.test_upload_base_photo.test_resizes_to_1024` — após upload, file salvo é 1024x1024.
-- [ ] `accounts.tests.test_upload_base_photo.test_persists_in_storage` — `professional_photo` field aponta pra key no MinIO.
-- [ ] `accounts.tests.test_generate_professional_photo.test_calls_image_api` — mock retorna bytes; persistidos no storage.
-- [ ] `accounts.tests.test_generate_professional_photo.test_updates_status_to_ready` — após task, `photo_status="ready"`.
-- [ ] `accounts.tests.test_generate_professional_photo.test_api_error_marks_failed` — exception da API → `photo_status="failed"`.
-- [ ] `accounts.tests.test_generate_professional_photo.test_one_retry_on_failure` — primeiro 5xx → retry → sucesso.
-- [ ] `integrations.image.tests.test_openai_client.test_generates_bytes` — smoke do client com mock.
-- [ ] `make test-fast` verde — >=235 testes passando (210 da Fase 3 + ~25 novos).
+- [x] `accounts.tests.test_upload_base_photo` — valida tamanho (>5MB), formato
+  (não-imagem), persistência da base, reset da profissional ao trocar a base.
+- [x] `accounts.tests.test_generate_professional_photo` — chama o client e
+  persiste; `photo_status="ready"` no sucesso; `HeadshotError` → `failed` +
+  re-raise; sem base → `ApplicationError`.
+- [x] `accounts.tests.test_photo_api` — endpoints de upload/generate/status.
+- [x] `integrations.headshot.tests.test_render_client` — wake+generate, 401,
+  retry em 5xx, parse malformado.
+- [x] `make test-fast` verde — **257 passed, 1 skipped** (33 testes novos).
 
 ### Backend — verificáveis manualmente
 
-- [ ] `make migrate` aplica migration de photo fields.
-- [ ] Bucket `sieve-artifacts` existe no MinIO (`http://localhost:9001` console).
-- [ ] `make ingest-knowledge` continua passando.
+- [x] `make migrate` aplica a migration de photo fields.
+- [ ] Geração real ponta-a-ponta contra a API do Render (smoke com a stack
+  rodando) — opcional; a API já foi validada isoladamente (ver `api_foto.md`).
 
 ### Frontend — automatizáveis
 
-- [ ] `make frontend-typecheck` verde.
-- [ ] `make frontend-lint` verde.
+- [x] `pnpm typecheck` verde.
+- [x] `pnpm lint` verde.
 
 ### Frontend — verificáveis manualmente
 
-- [ ] `/profile` mostra form de upload + preview da foto base atual + botão "Gerar foto profissional".
-- [ ] Upload aceita drag-and-drop e click pra escolher.
-- [ ] Após upload, foto base aparece no preview.
-- [ ] Botão "Gerar" dispara, mostra spinner, aguarda ~30s.
-- [ ] Após pronto, foto profissional aparece ao lado da foto base.
-- [ ] **Polimento**: em todas as páginas (chat, resume, matching, applications, profile):
-  - Loading inicial mostra `Skeleton` (não tela vazia).
-  - Lista vazia mostra empty state com CTA.
-  - Erros mostram `notifications.show({color: "red", ...})` consistente.
-  - Sucessos mostram `notifications.show({color: "green", ...})` em ações relevantes.
-  - Botões em mutation mostram `loading` prop (não permitem double-click).
-
-### Documentação — verificáveis manualmente
-
-- [ ] `docs/relatorio-academico.md` existe e cobre as 10 seções listadas no escopo.
-- [ ] Relatório tem >= 8 páginas A4 quando renderizado (pandoc smoke check).
-- [ ] `docs/apresentacao/roteiro-demo.md` tem passo-a-passo numerado pra demo de 5min.
-- [ ] `docs/apresentacao/slides.md` tem 15-20 slides (separados por `---` se markdown puro).
-- [ ] `docs/screenshots/` tem pelo menos 6 PNGs com as telas principais.
-- [ ] README raiz atualizado com:
-  - Descrição do produto (substituir TODO do template)
-  - Screenshots
-  - Link pro relatório acadêmico
-
-### Comportamentais (smoke test end-to-end final)
-
-- [ ] Demo de 5min completa sem bugs: login → chat (5 turns, 2 fases) → finalize → aguarda pipeline → preview/score/PDF → match com vaga → otimização → kanban com 2 cards → upload foto base → gerar foto profissional → side-by-side visível.
-- [ ] Nenhum erro 500 no console do browser durante a demo.
-- [ ] Nenhum erro de tipo no `tsc --noEmit`.
-
-## Verificação end-to-end
-
-```bash
-make refresh-venv
-make migrate
-make test-fast               # 235+ passing
-
-# Smoke completo (demo dry-run)
-make dev
-# Passar pelo roteiro completo:
-# 1. Login → dashboard
-# 2. /chat → nova sessão → 5+ turns → finalize
-# 3. Espera ~60s → /resumes/{id} visível com score + preview
-# 4. Exportar PDF, abrir
-# 5. /matching → colar vaga real (LinkedIn) → analyze → optimize
-# 6. Volta /resumes/{id} → v3 com keywords
-# 7. /applications → criar card → arrastar
-# 8. /profile → upload selfie → gerar → ver antes/depois
-
-# Renderizar relatório pra checar paginação
-cd docs && pandoc relatorio-academico.md -o relatorio-academico.pdf
-
-# Renderizar slides
-# (depende do tooling escolhido: reveal-md, marp, etc)
-```
+- [ ] `/profile` mostra upload + preview + botão "Gerar foto profissional".
+- [ ] Upload aceita drag-and-drop e click.
+- [ ] "Gerar" dispara, mostra estado de carregamento e **não expira** durante o
+  cold-start; ao ficar pronto, mostra antes/depois.
+- [ ] **Polimento** em chat/resume/matching/applications/profile: skeletons,
+  empty states com CTA, notificações consistentes, botões com `loading`.
 
 ## Riscos / armadilhas
 
-- **API de imagem cara** — gpt-image-1 é >$0.04/imagem. Limitar a 1 geração por minuto por user (rate limit). Documentar custo no relatório como "limitação conhecida".
-- **MinIO signed URL** — se `integrations/storage/` ainda não tem helper, precisa adicionar. Sem isso, frontend não consegue ler a foto (bucket privado).
-- **Foto base com rosto não detectável** — API pode falhar silenciosamente ou gerar imagem genérica. Fallback: mostrar erro claro "rosto não detectado, tente outra foto".
-- **Pillow dependency** — não está no pyproject. Adicionar e `refresh-venv`.
-- **Demo trava na hora** — sempre rodar o roteiro completo 1x antes da apresentação. Ter um screencast como backup.
-- **Relatório virando filler** — focar nas decisões interessantes (multi-agente sem framework, knowledge base versionada, guardrails) — não ficar descrevendo CRUD óbvio.
-- **Polish nunca acaba** — definir hoje quais empty states e error messages são "must" e quais são "nice". Não cair na espiral.
-- **Screenshots desatualizando** — tirar todos na mesma sessão, depois de já estar tudo polido. Re-tirar se mudar UI antes da entrega.
+- **Cold-start do Render** — primeira geração do dia pode levar minutos. Mitigado
+  por wake via `/health` + polling sem expiração. Chamar `/health` antes de uma
+  demo pra pré-aquecer.
+- **API externa fora do ar / 502** — o use case marca `photo_status="failed"`; o
+  front mostra erro com CTA pra tentar de novo.
+- **Mídia em dev** — `/media` precisa do proxy do Vite e do `static(...)` em
+  DEBUG; sem isso o browser não carrega a foto salva no filesystem.
+- **Rosto não detectável** — a API pode falhar; tratar como erro claro no front.
+- **Polish nunca acaba** — escopo travado nos 5 "must" (skeleton, empty state,
+  erro, sucesso, botão loading). Resto é nice-to-have documentado.
 
-## Subagentes recomendados pra delegação
+## Subagentes usados
 
-| Trabalho | Subagente | Por quê |
-|---|---|---|
-| Integration `image/` (OpenAI client) | `integrations-platform` | Padrão httpx + retry |
-| Migration + fields novos em `accounts/CandidateProfile`, use case de upload | `django-core` | Owner do app de Fase 1 |
-| Task Celery `generate_professional_photo_task` | `celery-orchestration` | Owner de `tasks.py` |
-| Tests dos use cases novos | `qa-validation` | Owner de tests |
-| Frontend domain `profile/` + polimento UX cross-domain | `frontend-core` | Owner; polimento é trabalho extenso de UX |
-| Relatório acadêmico + apresentação + roteiro de demo + screenshots | Orquestrador (você) | Trabalho de comunicação, não de código — concentrar |
+| Trabalho | Subagente |
+|---|---|
+| Integration `headshot/` | `integrations-platform` |
+| Model + migration + use cases + API + settings | `django-core` |
+| Task Celery | `celery-orchestration` |
+| Testes | `qa-validation` |
+| Frontend (foto + polimento) | `frontend-core` |
 
 ## Atualização do plano ao finalizar
 
-Esta é a **última fase**. Ao finalizar:
 1. Status → `✅ Done`, `**Entregue em:** YYYY-MM-DD`.
-2. Seção "O que ficou pronto" + decisões divergentes + verificação realizada.
-3. Atualizar [`fases-implementacao.md`](../fases-implementacao.md): última linha vira `✅ Done`.
-4. Considerar marcar este arquivo + os outros como "arquivo histórico" — `docs/planning/fases/` vira referência permanente do que foi feito.
-5. Atualizar [`README.md`](../../../README.md) raiz com link pro relatório acadêmico e screenshots — é o que o avaliador acadêmico vai ler primeiro.
+2. Resumo do que ficou pronto + decisões divergentes (registradas acima).
+3. Atualizar [`fases-implementacao.md`](../fases-implementacao.md).
