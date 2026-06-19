@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
+import { notifyError } from '@/lib/notifications';
 import { deleteApplication } from '../api/applications';
 import { APPLICATIONS_KEY } from './queryKeys';
 
@@ -18,11 +19,10 @@ export function useDeleteApplication() {
       });
     },
     onError: () => {
-      notifications.show({
-        color: 'red',
-        title: 'Falha ao remover',
-        message: 'Não consegui remover o card. Tente novamente.',
-      });
+      notifyError(
+        'Falha ao remover',
+        'Não consegui remover o card. Tente novamente.',
+      );
     },
   });
 }

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { notifications } from '@mantine/notifications';
+import { notifyError } from '@/lib/notifications';
 import { createSession } from '../api';
 import type { Session } from '../types';
 import { CHAT_SESSIONS_KEY, chatSessionKey } from './queryKeys';
@@ -15,11 +15,10 @@ export function useCreateSession() {
       queryClient.invalidateQueries({ queryKey: CHAT_SESSIONS_KEY });
     },
     onError: () => {
-      notifications.show({
-        color: 'red',
-        title: 'Falha ao iniciar',
-        message: 'Não consegui iniciar uma nova sessão. Tente novamente.',
-      });
+      notifyError(
+        'Falha ao iniciar',
+        'Não consegui iniciar uma nova sessão. Tente novamente.',
+      );
     },
   });
 }

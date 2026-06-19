@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { notifications } from '@mantine/notifications';
+import { notifyError } from '@/lib/notifications';
 import { moveApplication } from '../api/applications';
 import type { Application, ApplicationStatus } from '../types';
 import { APPLICATIONS_KEY } from './queryKeys';
@@ -35,11 +35,10 @@ export function useMoveApplication() {
       if (context?.previous) {
         queryClient.setQueryData(APPLICATIONS_KEY, context.previous);
       }
-      notifications.show({
-        color: 'red',
-        title: 'Não consegui mover',
-        message: 'A candidatura voltou para a coluna anterior. Tente de novo.',
-      });
+      notifyError(
+        'Não consegui mover',
+        'A candidatura voltou para a coluna anterior. Tente de novo.',
+      );
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: APPLICATIONS_KEY });

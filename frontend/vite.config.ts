@@ -36,6 +36,11 @@ export default defineConfig(({ mode }) => {
           target: proxyTarget,
           changeOrigin: true,
         },
+        // O backend serve as fotos em `/media/...`; o browser precisa alcançá-las.
+        '/media': {
+          target: proxyTarget,
+          changeOrigin: true,
+        },
       },
     },
   };

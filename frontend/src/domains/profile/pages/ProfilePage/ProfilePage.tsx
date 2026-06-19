@@ -16,7 +16,7 @@ import {
 import { useForm } from '@mantine/form';
 import { Check } from '@/components/atoms/Icon';
 import { ProfileAvatar } from '../../components/ProfileAvatar/ProfileAvatar';
-import { PhotoStudioPlaceholder } from '../../components/PhotoStudioPlaceholder/PhotoStudioPlaceholder';
+import { PhotoStudio } from '../../components/PhotoStudio/PhotoStudio';
 import { useMe } from '../../hooks/useMe';
 import { useUpdateMe } from '../../hooks/useUpdateMe';
 import type { CandidateProfile, CandidateProfileUpdate } from '../../types';
@@ -167,7 +167,7 @@ export function ProfilePage() {
       <PageHeader />
       <SimpleGrid cols={{ base: 1, lg: 2 }} spacing={24} style={{ alignItems: 'start' }}>
         <ProfileForm key={meQuery.data.updated_at} profile={meQuery.data} />
-        <PhotoStudioPlaceholder />
+        <PhotoStudio />
       </SimpleGrid>
     </Box>
   );

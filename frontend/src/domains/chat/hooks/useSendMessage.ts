@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { notifications } from '@mantine/notifications';
+import { notifyError } from '@/lib/notifications';
 import { sendMessage } from '../api';
 import type { Message, Session } from '../types';
 import { chatSessionKey } from './queryKeys';
@@ -48,11 +48,10 @@ export function useSendMessage(sessionId: string) {
       if (context?.previous) {
         queryClient.setQueryData(key, context.previous);
       }
-      notifications.show({
-        color: 'red',
-        title: 'Falha ao enviar',
-        message: 'Não consegui enviar sua mensagem. Tente novamente.',
-      });
+      notifyError(
+        'Falha ao enviar',
+        'Não consegui enviar sua mensagem. Tente novamente.',
+      );
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: key });

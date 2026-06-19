@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { notifications } from '@mantine/notifications';
+import { notifySuccess, notifyError } from '@/lib/notifications';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
@@ -55,18 +55,13 @@ export function useExportVisualPdf() {
       pdf.save(`${filename}.pdf`);
     },
     onSuccess: () => {
-      notifications.show({
-        color: 'green',
-        title: 'PDF exportado',
-        message: 'O modelo visual (igual à tela) foi baixado.',
-      });
+      notifySuccess('PDF exportado', 'O modelo visual (igual à tela) foi baixado.');
     },
     onError: () => {
-      notifications.show({
-        color: 'red',
-        title: 'Falha ao exportar',
-        message: 'Não consegui capturar o currículo. Tente novamente.',
-      });
+      notifyError(
+        'Falha ao exportar',
+        'Não consegui capturar o currículo. Tente novamente.',
+      );
     },
   });
 }

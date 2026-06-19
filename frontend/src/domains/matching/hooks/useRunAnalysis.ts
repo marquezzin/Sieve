@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { notifyError } from '@/lib/notifications';
 import { ingestJob } from '../api/jobs';
 import { analyze } from '../api/analysis';
 import { getResumeLatestVersion } from '../api/resumes';
@@ -46,6 +47,11 @@ export function useRunAnalysis() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: JOBS_KEY });
+    },
+    onError: (error) => {
+      // Além do Alert inline na coluna de saída, notifica de forma consistente
+      // com as demais mutations do app.
+      notifyError('Falha na análise', error.message);
     },
   });
 }
